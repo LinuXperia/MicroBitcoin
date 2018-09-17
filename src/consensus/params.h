@@ -71,7 +71,8 @@ struct Params {
     uint256 defaultAssumeValid;
 
     int mbcHeight;
-    int replyFixHeight;
+    int lwma2Height;
+    int lwma2AveragingWindow;
     int64_t mbcTimestamp;
     std::string premineAddress;
     CAmount premineValue;

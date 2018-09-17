@@ -114,8 +114,10 @@ public:
         consensus.mbcTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
+
         consensus.lwma2Height = 999999999;
-        // signSwithchTime = 1536696000;
+        consensus.lwma2AveragingWindow = 90;
+        signSwithchTime = 3000000000;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -245,7 +247,7 @@ public:
 
         consensus.lwma2Height = 999999999;
         consensus.lwma2AveragingWindow = 90;
-        // signSwithchTime = 1536696000;
+        signSwithchTime = 3000000000;
 
         pchBitcoinMessageStart[0] = 0x00;
         pchBitcoinMessageStart[1] = 0x10;
@@ -341,7 +343,10 @@ public:
         consensus.mbcTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 2000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
+
         consensus.lwma2Height = 999999999;
+        consensus.lwma2AveragingWindow = 90;
+        signSwithchTime = 3000000000;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;

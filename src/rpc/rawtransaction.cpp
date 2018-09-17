@@ -932,7 +932,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     const CKeyStore& keystore = tempKeystore;
 #endif
     int nHashType = SIGHASH_ALL | SIGHASH_FORKID;
-    if (chainActive.Height() < Params().GetConsensus().replyFixHeight) {
+    if (chainActive.Height() < Params().GetConsensus().lwma2Height) {
         nHashType = SIGHASH_ALL | SIGHASH_FORKID_OLD;
     }
     if (request.params.size() > 3 && !request.params[3].isNull()) {
