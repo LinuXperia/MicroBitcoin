@@ -127,9 +127,9 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
         }
     }
 
-    // Keep t reasonable to >= 1/10 of expected t.
-    if (t < k / 10 ) {
-        t = k / 10;
+    // Keep t reasonable to >= 1/4 of expected t.
+    if (t < k / 4 ) {
+        t = k / 4;
     }
     next_target = t * sum_target;
 
