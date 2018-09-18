@@ -542,7 +542,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     std::map<uint256, int64_t> setTxIndex;
     int i = 0;
 
-    if (pindexPrev->nHeight < Params().GetConsensus().lwma2Height - 5 && pindexPrev->nHeight > Params().GetConsensus().lwma2Height + 5)
+    if (pindexPrev->nHeight < Params().GetConsensus().lwma2Height - 5 || pindexPrev->nHeight > Params().GetConsensus().lwma2Height)
     {
         for (const auto& it : pblock->vtx) {
             const CTransaction& tx = *it;
