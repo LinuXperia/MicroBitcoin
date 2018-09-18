@@ -115,9 +115,9 @@ public:
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
-        consensus.lwma2Height = 999999999;
+        consensus.lwma2Height = 591000;
         consensus.lwma2AveragingWindow = 90;
-        signSwithchTime = 3000000000;
+        signSwithchTime = 1537387200;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -209,12 +209,12 @@ public:
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.BIP65Height = 2; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 2; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-        consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nWarmUpWindow = 5;
+        consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimitStart = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nWarmUpWindow = 500000;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
-        consensus.nBtcPowTargetSpacing = 10 * 60;
+        consensus.nBtcPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
@@ -240,8 +240,8 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        consensus.mbcHeight = 100;
-        consensus.mbcTimestamp = 1537036775; // Tuesday, 29 May 2018 р., 20:24:42
+        consensus.mbcHeight = 4;
+        consensus.mbcTimestamp = 1537036775;
         consensus.premineValue = 10000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vmd7hEpGhuKAzDYpq9qtbrf28pKKfULsbP";
 
