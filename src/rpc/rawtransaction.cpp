@@ -1035,6 +1035,11 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     LOCK(cs_main);
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL});
 
+    // Disable transaction broadcasting right before updating reply protection
+    if (chainActive.Height() > Params().GetConsensus().lwma2Height - 5 && chainActive.Height() <= Params().GetConsensus().lwma2Height) {
+        throw JSONRPCError(RPC_IN_WARMUP, "Transaction broadcasting disabled");
+    }
+
     // parse hex string from parameter
     CMutableTransaction mtx;
     if (!DecodeHexTx(mtx, request.params[0].get_str()))

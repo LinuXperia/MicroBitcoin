@@ -1873,6 +1873,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         return true;
     }
 
+    // Clear our mempool before updating reply protection
+    if (pindex->nHeight > chainparams.GetConsensus().lwma2Height - 5 && pindex->nHeight <= chainparams.GetConsensus().lwma2Height) {
+        mempool.clear();
+    }
+
     bool fScriptChecks = true;
     if (!hashAssumeValid.IsNull()) {
         // We've been configured with the hash of a block which has been externally verified to have a valid history.
