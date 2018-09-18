@@ -245,9 +245,9 @@ public:
         consensus.premineValue = 10000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vmd7hEpGhuKAzDYpq9qtbrf28pKKfULsbP";
 
-        consensus.lwma2Height = 999999999;
+        consensus.lwma2Height = 200;
         consensus.lwma2AveragingWindow = 90;
-        signSwithchTime = 3000000000;
+        signSwithchTime = -1;
 
         pchBitcoinMessageStart[0] = 0x00;
         pchBitcoinMessageStart[1] = 0x10;
