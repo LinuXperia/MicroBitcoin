@@ -186,7 +186,7 @@ bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
     if (vchSig.size() == 0) {
         return false;
     }
-    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID_OLD));
+    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY | SIGHASH_FORKID_OLD | SIGHASH_FORKID));
     if (nHashType < SIGHASH_ALL || nHashType > SIGHASH_SINGLE)
         return false;
 
@@ -231,19 +231,20 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
             return set_error(serror, SCRIPT_ERR_SIG_HASHTYPE);
         }
 
-        // Old reply protection
         bool usesForkIdOld = GetHashType(vchSig) & SIGHASH_FORKID_OLD;
         bool forkIdOldEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
-        if (!forkIdOldEnabled && usesForkIdOld) {
+        bool usesForkId = GetHashType(vchSig) & SIGHASH_FORKID;
+        bool forkIdEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID;
+
+        // Old reply protection
+        if (!forkIdOldEnabled && usesForkIdOld && !forkIdEnabled) {
             return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID_OLD);
         }
-        if (forkIdOldEnabled && !usesForkIdOld) {
+        if (forkIdOldEnabled && !usesForkIdOld && !forkIdEnabled) {
             return set_error(serror, SCRIPT_ERR_MUST_USE_FORKID_OLD);
         }
 
         // Reply protection
-        bool usesForkId = GetHashType(vchSig) & SIGHASH_FORKID;
-        bool forkIdEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID;
         if (!forkIdEnabled && !forkIdOldEnabled && usesForkId) {
             return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID);
         }
