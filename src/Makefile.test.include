@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-TESTS += test/test_bitcoin
+TESTS += test/test_microbitcoin
 bin_PROGRAMS += test/test_microbitcoin
 noinst_PROGRAMS += test/test_microbitcoin_fuzzy
 TEST_SRCDIR = test
