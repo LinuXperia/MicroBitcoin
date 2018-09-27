@@ -1135,7 +1135,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     }
 
     const int halvings = (nHeight - newSubsidyHeightMBC) / (consensusParams.nSubsidyHalvingInterval * 10) + 1;
-    if (halvings >= 20) {
+    if (halvings >= 18) {
         return 0;
     }
     const CAmount nSubsidy = (initSubsidyMBC >> halvings) / halvingRatio;
