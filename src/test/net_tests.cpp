@@ -126,7 +126,6 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
     adb.Read(addrman2, ssPeers2);
-    std::cout << addrman2.size();
     BOOST_CHECK(addrman2.size() == 3);
 }
 
