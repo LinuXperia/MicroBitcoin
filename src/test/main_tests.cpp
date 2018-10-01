@@ -13,36 +13,45 @@
 
 BOOST_FIXTURE_TEST_SUITE(main_tests, TestingSetup)
 
-static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
-{
-    int maxHalvings = 18;
-    CAmount nInitialSubsidy = 50 * COIN * COIN_RATIO;
-
-    CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
-        int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
-        nPreviousSubsidy = nSubsidy;
+static int halvingsHeight(int nHalvings, const Consensus::Params& consensusParams) {
+    if (nHalvings < 3) {
+        return nHalvings * consensusParams.nSubsidyHalvingInterval;
+    } else if (nHalvings == 3) {
+        return 1574991;
+    } else {
+        return 1574991 + (nHalvings - 3) * consensusParams.nSubsidyHalvingInterval * 10;
     }
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
 }
 
-static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
+static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
-    Consensus::Params consensusParams;
-    consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
-    TestBlockSubsidyHalvings(consensusParams);
+    int maxHalvings = 2 + 18;
+    CAmount nInitialSubsidy = 50 * COIN * COIN_RATIO;
+
+    CAmount nPreviousSubsidy = nInitialSubsidy * 2;
+    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
+
+    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
+        const int nHeight = halvingsHeight(nHalvings, consensusParams);
+
+        CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
+        if (consensusParams.mbcHeight <= nHeight) {
+            nSubsidy = nSubsidy * ((consensusParams.nSubsidyHalvingInterval * 10) / consensusParams.nSubsidyHalvingInterval);
+            BOOST_CHECK((nSubsidy == nPreviousSubsidy / 2) || ((nSubsidy + 5) == nPreviousSubsidy / 2));
+        } else {
+            BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
+        }
+
+        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
+        nPreviousSubsidy = nSubsidy;
+    }
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(halvingsHeight(maxHalvings, consensusParams), consensusParams), 0);
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
     TestBlockSubsidyHalvings(chainParams->GetConsensus()); // As in main
-    TestBlockSubsidyHalvings(150); // As in regtest
-    TestBlockSubsidyHalvings(1000); // Just another interval
 }
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
