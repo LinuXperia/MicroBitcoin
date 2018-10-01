@@ -163,7 +163,7 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vout.resize(2);
     tx.vout[0].nValue = 5000000000LL - 100000000;
-    tx.vout[1].nValue = 100000000; // 1BTC output
+    tx.vout[1].nValue = 100000000; // 10000 MBC output
     uint256 hashFreeTx2 = tx.GetHash();
     mempool.addUnchecked(hashFreeTx2, entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
 
@@ -178,6 +178,9 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
 
     // Verify that this tx isn't selected.
     for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
+        std::cout << "\n" << i << ": " << hashFreeTx2.GetHex() << "\n";
+        std::cout << "   " << pblocktemplate->block.vtx[i]->GetHash().GetHex() << "\n";
+        
         BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashFreeTx2);
         BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashLowFeeTx2);
     }
@@ -243,10 +246,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Just to make sure we can still make simple blocks
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
 
-    const CAmount BLOCKSUBSIDY = 50*COIN;
-    const CAmount LOWFEE = CENT;
-    const CAmount HIGHFEE = COIN;
-    const CAmount HIGHERFEE = 4*COIN;
+    const CAmount BLOCKSUBSIDY = 50 * COIN * COIN_RATIO;
+    const CAmount LOWFEE = CENT * COIN_RATIO;
+    const CAmount HIGHFEE = COIN * COIN_RATIO;
+    const CAmount HIGHERFEE = 4 * COIN * COIN_RATIO;
 
     // block sigops > limit: 1000 CHECKMULTISIG + 1
     tx.vin.resize(1);
