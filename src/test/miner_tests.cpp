@@ -178,9 +178,6 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
 
     // Verify that this tx isn't selected.
     for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
-        std::cout << "\n" << i << ": " << hashFreeTx2.GetHex() << "\n";
-        std::cout << "   " << pblocktemplate->block.vtx[i]->GetHash().GetHex() << "\n";
-        
         BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashFreeTx2);
         BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashLowFeeTx2);
     }
