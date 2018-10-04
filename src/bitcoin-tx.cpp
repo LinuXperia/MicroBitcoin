@@ -545,7 +545,7 @@ static CAmount AmountFromValue(const UniValue& value)
 
 static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 {
-    int nHashType = SIGHASH_ALL;
+    int nHashType = SIGHASH_ALL | SIGHASH_FORKID;
 
     if (flagStr.size() > 0)
         if (!findSighashFlags(nHashType, flagStr))
