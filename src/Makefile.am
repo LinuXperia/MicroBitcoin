@@ -277,8 +277,8 @@ crypto_libbitcoin_crypto_a_SOURCES += crypto/sha256_sse4.cpp
 endif
 
 # consensus: shared between all executables that validate any consensus rules.
-libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(PIC_FLAGS)
-libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
+libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
@@ -292,7 +292,6 @@ libbitcoin_consensus_a_SOURCES = \
   sphlib/groestl.cpp \
   groestlcoin-hash.cpp \
   prevector.h \
-  primitives/block.cpp \
   primitives/block.h \
   primitives/transaction.cpp \
   primitives/transaction.h \
@@ -328,6 +327,7 @@ libbitcoin_common_a_SOURCES = \
   netaddress.cpp \
   netbase.cpp \
   policy/feerate.cpp \
+  primitives/block.cpp \
   protocol.cpp \
   scheduler.cpp \
   script/sign.cpp \
