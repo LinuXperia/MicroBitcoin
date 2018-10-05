@@ -104,7 +104,7 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     assert(height > N);
 
     arith_uint256 sum_target, previous_diff, next_target;
-    int64_t t = 0, j = 0, solvetime, solvetime_sum;
+    int64_t t = 0, j = 0, solvetime = 0, solvetime_sum = 0;
 
     // Loop through N most recent blocks. 
     for (int i = height - N + 1; i <= height; i++) {
