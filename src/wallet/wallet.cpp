@@ -863,7 +863,7 @@ bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmoun
     return true;
 }
 
-bool CWallet::GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bForceNew)
+bool CWallet::GetAccountDestination(CTxDestination &dest, std::string strAccount, bool bForceNew)
 {
     CWalletDB walletdb(*dbw);
 
@@ -889,14 +889,16 @@ bool CWallet::GetAccountPubkey(CPubKey &pubKey, std::string strAccount, bool bFo
 
     // Generate a new key
     if (bForceNew) {
-        if (!GetKeyFromPool(account.vchPubKey, false))
+        if (!GetKeyFromPool(account.vchPubKey, false)) {
             return false;
+        }
 
-        SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
+        dest = account.vchPubKey.GetID();
+        SetAddressBook(dest, strAccount, "receive");
         walletdb.WriteAccount(strAccount, account);
+    } else {
+        dest = account.vchPubKey.GetID();
     }
-
-    pubKey = account.vchPubKey;
 
     return true;
 }
