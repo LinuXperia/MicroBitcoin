@@ -2124,7 +2124,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     const auto& coinbaseVouts = block.vtx[0]->vout;
     if (isPremineBlock)
     {
-        if (coinbaseVouts[0].nValue < premineValue || coinbaseVouts[0].scriptPubKey != GetScriptForDestination(CBitcoinAddress(chainparams.GetConsensus().premineAddress).Get()))
+        if (coinbaseVouts[0].nValue < premineValue || coinbaseVouts[0].scriptPubKey != GetScriptForDestination(DecodeDestination(chainparams.GetConsensus().premineAddress)))
         {
             return state.DoS(100, error("ConnectBlock(): coinbase has no premine (actual=%d vs premine=%d)", block.vtx[0]-> GetValueOut(), premineValue), REJECT_INVALID, "bad-cb-no-premine");
         }
