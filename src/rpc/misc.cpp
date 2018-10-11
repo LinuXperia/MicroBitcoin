@@ -313,8 +313,9 @@ UniValue validateaddress(const JSONRPCRequest& request)
         }
         if (pwallet) {
             const CKeyMetadata* meta = nullptr;
-            if (const CKeyID* key_id = boost::get<CKeyID>(&dest)) {
-                auto it = pwallet->mapKeyMetadata.find(*key_id);
+            CKeyID key_id = GetKeyForDestination(*pwallet, dest);
+            if (!key_id.IsNull()) {
+                auto it = pwallet->mapKeyMetadata.find(key_id);
                 if (it != pwallet->mapKeyMetadata.end()) {
                     meta = &it->second;
                 }
