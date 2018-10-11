@@ -232,7 +232,6 @@ public:
     CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
 
     CTxDestination Get() const;
-    bool GetIndexKey(uint160& hashBytes, int& type) const;
     bool GetKeyID(CKeyID &keyID) const;
     bool IsScript() const;
 };
@@ -294,23 +293,6 @@ CTxDestination CBitcoinAddress::Get() const
         return CScriptID(id);
     else
         return CNoDestination();
-}
-
-bool CBitcoinAddress::GetIndexKey(uint160& hashBytes, int& type) const
-{
-    if (!IsValid()) {
-        return false;
-    } else if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS)) {
-        memcpy(&hashBytes, &vchData[0], 20);
-        type = 1;
-        return true;
-    } else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS)) {
-        memcpy(&hashBytes, &vchData[0], 20);
-        type = 2;
-        return true;
-    }
-
-    return false;
 }
 
 bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
