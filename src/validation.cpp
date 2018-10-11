@@ -1717,7 +1717,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     }
 
     // Clear our mempool before updating replay protection
-    if (pindex->nHeight > chainparams.GetConsensus().lwma2Height - 5 && pindex->nHeight <= chainparams.GetConsensus().lwma2Height) {
+    if (pindex->nHeight == chainparams.GetConsensus().lwma2Height) {
         mempool.clear();
     }
 
