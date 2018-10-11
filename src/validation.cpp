@@ -1662,12 +1662,13 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    // After hardfork we start accepting replay protected txns 
+    // After hardfork we start accepting replay protected txns (OLD)
     if (pindex->nHeight >= consensusparams.mbcHeight && pindex->nHeight < consensusparams.lwma2Height) {
         flags |= SCRIPT_VERIFY_STRICTENC;
         flags |= SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
     }
 
+    // New replay protection
     if (pindex->nHeight >= consensusparams.lwma2Height) {
         flags |= SCRIPT_VERIFY_STRICTENC;
         flags |= SCRIPT_ENABLE_SIGHASH_FORKID;
@@ -1715,7 +1716,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         return true;
     }
 
-    // Clear our mempool before updating reply protection
+    // Clear our mempool before updating replay protection
     if (pindex->nHeight > chainparams.GetConsensus().lwma2Height - 5 && pindex->nHeight <= chainparams.GetConsensus().lwma2Height) {
         mempool.clear();
     }

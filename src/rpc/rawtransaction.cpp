@@ -917,14 +917,14 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             {std::string("NONE|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_ANYONECANPAY)},
             {std::string("SINGLE"), int(SIGHASH_SINGLE)},
             {std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY)},
-            // Old reply protection
+            // Old replay protection
             {std::string("ALL|FORKID_OLD"), int(SIGHASH_ALL|SIGHASH_FORKID_OLD)},
             {std::string("NONE|FORKID_OLD"), int(SIGHASH_NONE|SIGHASH_FORKID_OLD)},
             {std::string("SINGLE|FORKID_OLD"), int(SIGHASH_SINGLE|SIGHASH_FORKID_OLD)},
             {std::string("ALL|FORKID_OLD|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
             {std::string("NONE|FORKID_OLD|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
             {std::string("SINGLE|FORKID_OLD|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY)},
-            // Reply protection
+            // Replay protection
             {std::string("ALL|FORKID"), int(SIGHASH_ALL|SIGHASH_FORKID)},
             {std::string("NONE|FORKID"), int(SIGHASH_NONE|SIGHASH_FORKID)},
             {std::string("SINGLE|FORKID"), int(SIGHASH_SINGLE|SIGHASH_FORKID)},

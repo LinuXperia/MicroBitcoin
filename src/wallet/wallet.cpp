@@ -2547,7 +2547,7 @@ bool CWallet::SignTransaction(CMutableTransaction &tx)
         const CAmount& amount = mi->second.tx->vout[input.prevout.n].nValue;
         SignatureData sigdata;
 
-        // Reply protection
+        // Replay protection
         if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, amount, SIGHASH_ALL|SIGHASH_FORKID), scriptPubKey, sigdata)) {
             return false;
         }
@@ -2929,7 +2929,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
-                // Reply protection
+                // Replay protection
                 if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, coin.txout.nValue, SIGHASH_ALL | SIGHASH_FORKID), scriptPubKey, sigdata)) {
                     strFailReason = _("Signing transaction failed");
                     return false;
