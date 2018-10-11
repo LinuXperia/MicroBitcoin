@@ -909,9 +909,6 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
     const CKeyStore& keystore = tempKeystore;
 #endif
     int nHashType = SIGHASH_ALL | SIGHASH_FORKID;
-    if (chainActive.Height() < Params().GetConsensus().lwma2Height) {
-        nHashType = SIGHASH_ALL | SIGHASH_FORKID_OLD;
-    }
     if (request.params.size() > 3 && !request.params[3].isNull()) {
         static std::map<std::string, int> mapSigHashValues = {
             {std::string("ALL"), int(SIGHASH_ALL)},
@@ -1011,11 +1008,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 
     LOCK(cs_main);
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL});
-
-    // Disable transaction broadcasting right before updating reply protection
-    if (chainActive.Height() > Params().GetConsensus().lwma2Height - 5 && chainActive.Height() <= Params().GetConsensus().lwma2Height) {
-        throw JSONRPCError(RPC_IN_WARMUP, "Transaction broadcasting disabled");
-    }
 
     // parse hex string from parameter
     CMutableTransaction mtx;

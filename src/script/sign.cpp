@@ -13,9 +13,6 @@
 #include "script/standard.h"
 #include "uint256.h"
 
-#include "utiltime.h"
-#include "chainparams.h"
-
 typedef std::vector<unsigned char> valtype;
 
 TransactionSignatureCreator::TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : BaseSignatureCreator(keystoreIn), txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
@@ -420,13 +417,7 @@ bool DummySignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const 
     vchSig[4 + 33] = 0x02;
     vchSig[5 + 33] = 32;
     vchSig[6 + 33] = 0x01;
-
-    // Remove this after reply fix fork!
-    if (GetTime() > Params().signSwithchTime) {
-        vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID;
-    } else {
-        vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID_OLD;
-    }
+    vchSig[6 + 33 + 32] = SIGHASH_ALL | SIGHASH_FORKID;
 
     return true;
 }

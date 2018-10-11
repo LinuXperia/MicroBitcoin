@@ -543,42 +543,39 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     std::map<uint256, int64_t> setTxIndex;
     int i = 0;
 
-    if (pindexPrev->nHeight < Params().GetConsensus().lwma2Height - 5 || pindexPrev->nHeight > Params().GetConsensus().lwma2Height)
-    {
-        for (const auto& it : pblock->vtx) {
-            const CTransaction& tx = *it;
-            uint256 txHash = tx.GetHash();
-            setTxIndex[txHash] = i++;
+    for (const auto& it : pblock->vtx) {
+        const CTransaction& tx = *it;
+        uint256 txHash = tx.GetHash();
+        setTxIndex[txHash] = i++;
 
-            if (tx.IsCoinBase())
-                continue;
+        if (tx.IsCoinBase())
+            continue;
 
-            UniValue entry(UniValue::VOBJ);
+        UniValue entry(UniValue::VOBJ);
 
-            entry.push_back(Pair("data", EncodeHexTx(tx)));
-            entry.push_back(Pair("txid", txHash.GetHex()));
-            entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
+        entry.push_back(Pair("data", EncodeHexTx(tx)));
+        entry.push_back(Pair("txid", txHash.GetHex()));
+        entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
 
-            UniValue deps(UniValue::VARR);
-            for (const CTxIn &in : tx.vin)
-            {
-                if (setTxIndex.count(in.prevout.hash))
-                    deps.push_back(setTxIndex[in.prevout.hash]);
-            }
-            entry.push_back(Pair("depends", deps));
-
-            int index_in_template = i - 1;
-            entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
-            int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
-            if (fPreSegWit) {
-                assert(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
-                nTxSigOps /= WITNESS_SCALE_FACTOR;
-            }
-            entry.push_back(Pair("sigops", nTxSigOps));
-            entry.push_back(Pair("weight", GetTransactionWeight(tx)));
-
-            transactions.push_back(entry);
+        UniValue deps(UniValue::VARR);
+        for (const CTxIn &in : tx.vin)
+        {
+            if (setTxIndex.count(in.prevout.hash))
+                deps.push_back(setTxIndex[in.prevout.hash]);
         }
+        entry.push_back(Pair("depends", deps));
+
+        int index_in_template = i - 1;
+        entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
+        int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
+        if (fPreSegWit) {
+            assert(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
+            nTxSigOps /= WITNESS_SCALE_FACTOR;
+        }
+        entry.push_back(Pair("sigops", nTxSigOps));
+        entry.push_back(Pair("weight", GetTransactionWeight(tx)));
+
+        transactions.push_back(entry);
     }
 
     UniValue aux(UniValue::VOBJ);

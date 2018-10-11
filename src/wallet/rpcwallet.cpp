@@ -454,11 +454,6 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    // Disable transaction sending right before updating reply protection
-    if (chainActive.Height() > Params().GetConsensus().lwma2Height - 5 && chainActive.Height() <= Params().GetConsensus().lwma2Height) {
-        throw JSONRPCError(RPC_IN_WARMUP, "Transaction sending disabled");
-    }
-
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid MicroBitcoin address");
@@ -1171,7 +1166,7 @@ public:
             if (!IsSolvable(*pwallet, witscript)) {
                 return false;
             }
-            
+
             pwallet->AddCScript(witscript);
             result = CScriptID(witscript);
             return true;

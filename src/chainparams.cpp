@@ -117,7 +117,6 @@ public:
 
         consensus.lwma2Height = 591000;
         consensus.lwma2AveragingWindow = 90;
-        signSwithchTime = 1537387200;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -247,7 +246,6 @@ public:
 
         consensus.lwma2Height = 120;
         consensus.lwma2AveragingWindow = 90;
-        signSwithchTime = 1537036775;
 
         pchBitcoinMessageStart[0] = 0x00;
         pchBitcoinMessageStart[1] = 0x10;
@@ -346,7 +344,6 @@ public:
 
         consensus.lwma2Height = 200;
         consensus.lwma2AveragingWindow = 90;
-        signSwithchTime = 1537036775;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;
