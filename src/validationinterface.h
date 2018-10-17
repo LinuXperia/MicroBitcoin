@@ -6,10 +6,10 @@
 #ifndef BITCOIN_VALIDATIONINTERFACE_H
 #define BITCOIN_VALIDATIONINTERFACE_H
 
-#include "primitives/transaction.h" // CTransaction(Ref)
+#include <primitives/transaction.h> // CTransaction(Ref)
 
 #include <functional>
-#include <memory> 
+#include <memory>
 
 class CBlock;
 class CBlockIndex;
@@ -41,7 +41,17 @@ void UnregisterAllValidationInterfaces();
  * wait for things like cs_main, so blocking until func is called with cs_main
  * will result in a deadlock (that DEBUG_LOCKORDER will miss).
  */
-void CallFunctionInValidationInterfaceQueue(std::function<void ()> func); 
+void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
+/**
+ * This is a synonym for the following, which asserts certain locks are not
+ * held:
+ *     std::promise<void> promise;
+ *     CallFunctionInValidationInterfaceQueue([&promise] {
+ *         promise.set_value();
+ *     });
+ *     promise.get_future().wait();
+ */
+void SyncWithValidationInterfaceQueue();
 
 class CValidationInterface {
 protected:
@@ -109,7 +119,6 @@ protected:
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
-
 };
 
 struct MainSignalsInstance;

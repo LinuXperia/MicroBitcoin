@@ -2593,13 +2593,11 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
     // far from a guarantee. Things in the P2P/RPC will often end up calling
     // us in the middle of ProcessNewBlock - do not assume pblock is set
     // sanely for performance or correctness!
-
     AssertLockNotHeld(cs_main);
-    
+
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
     int nStopAtHeight = gArgs.GetArg("-stopatheight", DEFAULT_STOPATHEIGHT);
-
     do {
         boost::this_thread::interruption_point();
 
@@ -2607,11 +2605,7 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
             // Block until the validation queue drains. This should largely
             // never happen in normal operation, however may happen during
             // reindex, causing memory blowup  if we run too far ahead.
-            std::promise<void> promise;
-            CallFunctionInValidationInterfaceQueue([&promise] {
-                promise.set_value();
-            });
-            promise.get_future().wait();
+            SyncWithValidationInterfaceQueue();
         }
 
         if (ShutdownRequested())
@@ -2664,8 +2658,8 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
 
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
     } while (pindexNewTip != pindexMostWork);
-
     CheckBlockIndex(chainparams.GetConsensus());
+
     // Write changes periodically to disk, after relay.
     if (!FlushStateToDisk(chainparams, state, FLUSH_STATE_PERIODIC)) {
         return false;
