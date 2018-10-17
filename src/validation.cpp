@@ -610,7 +610,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
 
-        CAmount nValueIn = 0;
         LockPoints lp;
         {
         LOCK(pool.cs);
@@ -641,8 +640,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // Bring the best block into scope
         view.GetBestBlock();
 
-        nValueIn = view.GetValueIn(tx);
-
         // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
         view.SetBackend(dummy);
 
@@ -655,18 +652,23 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
         }
 
+        CAmount nFees = 0;
+        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees)) {
+            return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
+        }
+
         // Check for non-standard pay-to-script-hash in inputs
-        if (fRequireStandard && !AreInputsStandard(tx, view))
+        if (fRequireStandard && !AreInputsStandard(tx, view)) {
             return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
+        }
 
         // Check for non-standard witness in P2WSH
-        if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, view))
+        if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, view)) {
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-witness-nonstandard", true);
+        }
 
         int64_t nSigOpsCost = GetTransactionSigOpCost(tx, view, STANDARD_SCRIPT_VERIFY_FLAGS);
 
-        CAmount nValueOut = tx.GetValueOut();
-        CAmount nFees = nValueIn-nValueOut;
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
         CAmount nModifiedFees = nFees;
         pool.ApplyDelta(hash, nModifiedFees);
@@ -1350,11 +1352,9 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 {
     if (!tx.IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
-            return false;
-
-        if (pvChecks)
+        if (pvChecks) {
             pvChecks->reserve(tx.vin.size());
+        }
 
         // The first loop above does all the inexpensive checks.
         // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
@@ -1918,9 +1918,15 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
         if (!tx.IsCoinBase())
         {
-            if (!view.HaveInputs(tx))
-                return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
-                                 REJECT_INVALID, "bad-txns-inputs-missingorspent");
+            CAmount txfee = 0;
+            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee)) {
+                return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
+            }
+            nFees += txfee;
+            if (!MoneyRange(nFees)) {
+                return state.DoS(100, error("%s: accumulated fee in the block out of range.", __func__),
+                                 REJECT_INVALID, "bad-txns-accumulated-fee-outofrange");
+            }
 
             // Check that transaction is BIP68 final
             // BIP68 lock checks (as opposed to nLockTime checks) must
@@ -1948,8 +1954,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
-
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr))
