@@ -656,6 +656,7 @@ private:
     std::vector<char> _ssExtra;
 };
 
+class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 
 /** 
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
@@ -666,7 +667,9 @@ class CWallet : public CCryptoKeyStore, public CValidationInterface
 private:
     static std::atomic<bool> fFlushScheduled;
     std::atomic<bool> fAbortRescan;
-    std::atomic<bool> fScanningWallet;
+    std::atomic<bool> fScanningWallet; //controlled by WalletRescanReserver
+    std::mutex mutexScanning;
+    friend class WalletRescanReserver;
 
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
@@ -942,8 +945,8 @@ public:
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex *pindex, const std::vector<CTransactionRef>& vtxConflicted) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
-    int64_t RescanFromTime(int64_t startTime, bool update);
-    CBlockIndex* ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
+    int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
+    CBlockIndex* ScanForWalletTransactions(CBlockIndex* pindexStart, CBlockIndex* pindexStop, const WalletRescanReserver& reserver, bool fUpdate = false);
     void TransactionRemovedFromMempool(const CTransactionRef &ptx) override;
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
@@ -1256,5 +1259,41 @@ const std::string& FormatOutputType(OutputType type);
 CTxDestination GetDestinationForKey(const CPubKey& key, OutputType);
 /** Get all destinations (potentially) supported by the wallet for the given key. */
 std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
+
+/** RAII object to check and reserve a wallet rescan */
+class WalletRescanReserver
+{
+private:
+    CWalletRef m_wallet;
+    bool m_could_reserve;
+public:
+    explicit WalletRescanReserver(CWalletRef w) : m_wallet(w), m_could_reserve(false) {}
+
+    bool reserve()
+    {
+        assert(!m_could_reserve);
+        std::lock_guard<std::mutex> lock(m_wallet->mutexScanning);
+        if (m_wallet->fScanningWallet) {
+            return false;
+        }
+        m_wallet->fScanningWallet = true;
+        m_could_reserve = true;
+        return true;
+    }
+
+    bool isReserved() const
+    {
+        return (m_could_reserve && m_wallet->fScanningWallet);
+    }
+
+    ~WalletRescanReserver()
+    {
+        std::lock_guard<std::mutex> lock(m_wallet->mutexScanning);
+        if (m_could_reserve) {
+            m_wallet->fScanningWallet = false;
+        }
+    }
+};
+
 
 #endif // BITCOIN_WALLET_WALLET_H

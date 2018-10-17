@@ -1094,13 +1094,24 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
 
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
-    if (!ReadBlockFromDisk(block, pindex->GetBlockPos(), consensusParams))
+    CDiskBlockPos blockPos;
+    {
+        LOCK(cs_main);
+        blockPos = pindex->GetBlockPos();
+    }
+    if (!ReadBlockFromDisk(block, blockPos, consensusParams)) {
         return false;
-    if (block.GetHash() != pindex->GetBlockHash())
+    }
+
+    if (block.GetHash() != pindex->GetBlockHash()) {
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
-    if (pindex->nHeight >= consensusParams.mbcHeight && !block.IsMicroBitcoin())
+    }
+
+    if (pindex->nHeight >= consensusParams.mbcHeight && !block.IsMicroBitcoin()) {
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): Wrong hardfork version for %s at %s", pindex->ToString(), pindex->GetBlockPos().ToString());
+    }
+    
     return true;
 }
 

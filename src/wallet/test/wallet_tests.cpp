@@ -386,7 +386,9 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     {
         CWallet wallet;
         AddKey(wallet, coinbaseKey);
-        BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip));
+        WalletRescanReserver reserver(&wallet);
+        reserver.reserve();
+        BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN * COIN_RATIO);
     }
 
@@ -399,7 +401,9 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     {
         CWallet wallet;
         AddKey(wallet, coinbaseKey);
-        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip));
+        WalletRescanReserver reserver(&wallet);
+        reserver.reserve();
+        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN * COIN_RATIO);
     }
 
@@ -604,7 +608,9 @@ public:
         bool firstRun;
         wallet->LoadWallet(firstRun);
         AddKey(*wallet, coinbaseKey);
-        wallet->ScanForWalletTransactions(chainActive.Genesis());
+        WalletRescanReserver reserver(wallet.get());
+        reserver.reserve();
+        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver);
     }
 
     ~ListCoinsTestingSetup()
