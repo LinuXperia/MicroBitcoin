@@ -1258,8 +1258,8 @@ UniValue addwitnessaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
     {
         std::string msg = "addwitnessaddress \"address\" ( p2sh )\n"
-            "\nAdd a witness address for a script (with pubkey or redeemscript known).\n"
-            "It returns the witness script.\n"
+            "\nDEPRECATED: set the address_type argument of getnewaddress, or option -addresstype=[bech32|p2sh-segwit] instead.\n"
+            "Add a witness address for a script (with pubkey or redeemscript known). Requires a new wallet backup.\n"
 
             "\nArguments:\n"
             "1. \"address\"       (string, required) An address known to the wallet\n"
@@ -3297,7 +3297,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "abandontransaction",       &abandontransaction,       false,  {"txid"} },
     { "wallet",             "abortrescan",              &abortrescan,              false,  {} },
     { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account"} },
-    { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address","p2sh"} },
+    { "hidden",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address","p2sh"} },
     { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination"} },
     { "wallet",             "bumpfee",                  &bumpfee,                  true,   {"txid", "options"} },
     { "wallet",             "dumpprivkey",              &dumpprivkey,              true,   {"address"}  },
