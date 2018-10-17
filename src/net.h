@@ -129,6 +129,7 @@ public:
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
+        ServiceFlags nRelevantServices = NODE_NONE;
         int nMaxConnections = 0;
         int nMaxOutbound = 0;
         int nMaxAddnode = 0;
@@ -398,6 +399,9 @@ private:
     /** Services this instance offers */
     ServiceFlags nLocalServices;
 
+    /** Services this instance cares about */
+    ServiceFlags nRelevantServices;
+
     CSemaphore *semOutbound;
     CSemaphore *semAddnode;
     int nMaxConnections;
@@ -597,6 +601,7 @@ class CNode
 public:
     // socket
     std::atomic<ServiceFlags> nServices;
+    ServiceFlags nServicesExpected;
     SOCKET hSocket;
     size_t nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
