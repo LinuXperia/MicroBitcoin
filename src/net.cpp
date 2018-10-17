@@ -1930,11 +1930,6 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
 
 void CConnman::ThreadOpenAddedConnections()
 {
-    {
-        LOCK(cs_vAddedNodes);
-        vAddedNodes = gArgs.GetArgs("-addnode");
-    }
-
     while (true)
     {
         CSemaphoreGrant grant(*semAddnode);
@@ -2287,10 +2282,16 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 {
     Init(connOptions);
 
-    nTotalBytesRecv = 0;
-    nTotalBytesSent = 0;
-    nMaxOutboundTotalBytesSentInCycle = 0;
-    nMaxOutboundCycleStartTime = 0;
+    {
+        LOCK(cs_totalBytesRecv);
+        nTotalBytesRecv = 0;
+    }
+    {
+        LOCK(cs_totalBytesSent);
+        nTotalBytesSent = 0;
+        nMaxOutboundTotalBytesSentInCycle = 0;
+        nMaxOutboundCycleStartTime = 0;
+    }
 
     if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds)) {
         if (clientInterface) {
