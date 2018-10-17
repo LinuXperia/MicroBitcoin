@@ -15,13 +15,13 @@ from test_framework.util import assert_equal, assert_raises_rpc_error
 class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 1
-        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3']]
+        self.num_nodes = 2
+        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3', '-wallet=w'], []] 
 
     def run_test(self):
         assert_equal(set(self.nodes[0].listwallets()), {"w1", "w2", "w3"})
 
-        self.stop_node(0)
+        self.stop_nodes()
 
         # should not initialize if there are duplicate wallets
         self.assert_start_raises_init_error(0, ['-wallet=w1', '-wallet=w1'], 'Error loading wallet w1. Duplicate -wallet filename specified.')
