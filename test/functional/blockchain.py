@@ -5,6 +5,7 @@
 """Test RPCs related to blockchainstate.
 
 Test the following RPCs:
+    - getblockchaininfo
     - gettxoutsetinfo
     - getdifficulty
     - getbestblockhash
