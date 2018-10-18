@@ -4,16 +4,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
+#include <rpc/server.h>
 
-#include "base58.h"
-#include "fs.h"
-#include "init.h"
-#include "random.h"
-#include "sync.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <fs.h>
+#include <init.h>
+#include <random.h>
+#include <sync.h>
+#include <ui_interface.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 #include <univalue.h>
 
@@ -386,6 +386,13 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         params = UniValue(UniValue::VARR);
     else
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
+}
+
+bool IsDeprecatedRPCEnabled(const std::string& method)
+{
+    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
+
+    return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
 }
 
 static UniValue JSONRPCExecOne(const UniValue& req)

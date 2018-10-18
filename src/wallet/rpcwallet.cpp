@@ -17,6 +17,7 @@
 #include <policy/rbf.h>
 #include <rpc/mining.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <script/sign.h>
 #include <timedata.h>
 #include <util.h>
@@ -1157,6 +1158,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "       ...,\n"
             "     ]\n"
             "3. \"account\"      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
+            "4. \"address_type\"                 (string, optional) The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is set by -addresstype.\n"
 
             "\nResult:\n"
             "\"address\"         (string) A bitcoin address associated with the keys.\n"
@@ -1173,14 +1175,23 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strAccount;
-    if (request.params.size() > 2)
+    if (request.params.size() > 2) {
         strAccount = AccountFromValue(request.params[2]);
+    }
+
+    OutputType output_type = g_address_type;
+    if (!request.params[3].isNull()) {
+        output_type = ParseOutputType(request.params[3].get_str(), output_type);
+        if (output_type == OUTPUT_TYPE_NONE) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[3].get_str()));
+        }
+    }
 
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(pwallet, request.params);
     pwallet->AddCScript(inner);
 
-    CTxDestination dest = pwallet->AddAndGetDestinationForScript(inner, g_address_type);
+    CTxDestination dest = pwallet->AddAndGetDestinationForScript(inner, output_type);
     pwallet->SetAddressBook(dest, strAccount, "send");
     return EncodeDestination(dest);
 }
@@ -3393,7 +3404,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "resendwallettransactions", &resendwallettransactions, true,   {} },
     { "wallet",             "abandontransaction",       &abandontransaction,       false,  {"txid"} },
     { "wallet",             "abortrescan",              &abortrescan,              false,  {} },
-    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account"} },
+    { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true,   {"nrequired","keys","account","address_type"} },
     { "hidden",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address","p2sh"} },
     { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination"} },
     { "wallet",             "bumpfee",                  &bumpfee,                  true,   {"txid", "options"} },
