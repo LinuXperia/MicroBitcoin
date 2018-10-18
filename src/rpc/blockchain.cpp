@@ -193,7 +193,7 @@ void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
 
 UniValue waitfornewblock(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 1)
+    if (request.fHelp || request.params.size() > 1) {
         throw std::runtime_error(
             "waitfornewblock (timeout)\n"
             "\nWaits for a specific new block and returns useful info about it.\n"
@@ -209,9 +209,12 @@ UniValue waitfornewblock(const JSONRPCRequest& request)
             + HelpExampleCli("waitfornewblock", "1000")
             + HelpExampleRpc("waitfornewblock", "1000")
         );
+    }
+    
     int timeout = 0;
-    if (!request.params[0].isNull())
+    if (!request.params[0].isNull()) {
         timeout = request.params[0].get_int();
+    }
 
     CUpdatedBlock block;
     {
