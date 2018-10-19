@@ -158,6 +158,7 @@ public:
         fMineBlocksOnDemand = false;
 
         checkpointData = (CCheckpointData) {
+            checkpointData = (CCheckpointData) {
             {
                 { 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")},
                 { 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")},
@@ -184,6 +185,8 @@ public:
                 {490000, uint256S("0x000000000000000000de069137b17b8d5a3dfbd5b145b2dcfb203f15d0c4de90")},
                 {510000, uint256S("0x000000000000000000152678f83ec36b6951ed3f7e1cc3b04c5828cab8017329")},
                 {524000, uint256S("0x0000000000000000001bea2335a21ec3b6ffad22368b168714a7fbf0a4c68fe4")},
+                {580000, uint256S("0x00000000000315a1dfedb919507455116c696ea95dd45717bfbae9de9849a95f")},
+                {590000, uint256S("0x0000000000013566d1dae0e0e170c7262891adec3521467e3a8c29c8fe7d7973")},
             }
         };
 
