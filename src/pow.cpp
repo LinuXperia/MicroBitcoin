@@ -140,6 +140,68 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     return next_target.GetCompact();
 }
 
+// Copyright (c) 2017-2018 The Bitcoin Gold developers
+// Copyright (c) 2018 Zawy (M.I.T license continued)
+// Algorithm by zawy, a modification of WT-144 by Tom Harding
+// Code by h4x3rotab of BTC Gold, modified/updated by zawy
+// Updated to LWMA3 by iamstenman
+// https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-388386175
+
+unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
+{
+    const int64_t T = params.nPowTargetSpacing;
+    const int64_t N = params.lwma2AveragingWindow;
+    const int64_t k = N * (N + 1) * T / 2;
+    const int height = pindexLast->nHeight;
+    assert(height > N);
+
+    arith_uint256 sum_target, previous_diff, next_target;
+    int64_t t = 0, j = 0, solvetime_sum;
+    int64_t max_timestamp, previous_max_timestamp;
+
+    const CBlockIndex* block_prev_max = block->GetAncestor(height - N);
+    previous_max_timestamp = block_prev_max->GetBlockTime();
+
+    // Loop through N most recent blocks. 
+    for (int i = height - N + 1; i <= height; i++) {
+        const CBlockIndex* block = pindexLast->GetAncestor(i);
+        const CBlockIndex* block_Prev = block->GetAncestor(i - 1);
+
+        if (block->GetBlockTime() > previous_max_timestamp) {
+            max_timestamp = block->GetBlockTime();
+        } else {
+            max_timestamp = previous_max_timestamp + 1;
+        }
+
+        int64_t solvetime = std::min(6 * T, max_timestamp - previous_max_timestamp);
+
+        j++;
+        t += solvetime * j; // Weighted solvetime sum.
+        arith_uint256 target;
+        target.SetCompact(block->nBits);
+        sum_target += target / (k * N);
+
+        if (i > height - 3) {
+            solvetime_sum += solvetime;
+        }
+        
+        if (i == height) {
+            previous_diff = target.SetCompact(block->nBits); // Latest block target
+        }
+    }
+
+    next_target = t * sum_target;
+    
+    // The following limits are the generous max that should reasonably occur.
+    next_target = std::max((previous_diff * 67) / 100, std::min(next_target, (previous_diff * 150) / 100));
+
+    if (solvetime_sum < (8 * T) / 10) {
+        next_target = previous_diff * 100 / 106;
+    }
+
+    return next_target.GetCompact();
+}
+
 static unsigned int BitcoinNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     // Go back by what we want to be 14 days worth of blocks
