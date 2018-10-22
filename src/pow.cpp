@@ -98,7 +98,7 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const Consen
 unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
     const int64_t T = params.nPowTargetSpacing;
-    const int64_t N = params.lwma2AveragingWindow;
+    const int64_t N = params.lwmaAveragingWindow;
     const int64_t k = N * (N + 1) * T / 2;
     const int height = pindexLast->nHeight;
     assert(height > N);
@@ -150,30 +150,30 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
 unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
     const int64_t T = params.nPowTargetSpacing;
-    const int64_t N = params.lwma2AveragingWindow;
+    const int64_t N = params.lwmaAveragingWindow;
     const int64_t k = N * (N + 1) * T / 2;
     const int height = pindexLast->nHeight;
     assert(height > N);
 
     arith_uint256 sum_target, previous_diff, next_target;
     int64_t t = 0, j = 0, solvetime_sum;
-    int64_t max_timestamp, previous_max_timestamp;
+    int64_t this_timestamp, previous_timestamp;
 
     const CBlockIndex* block_prev_max = block->GetAncestor(height - N);
-    previous_max_timestamp = block_prev_max->GetBlockTime();
+    previous_timestamp = block_prev_max->GetBlockTime();
 
     // Loop through N most recent blocks. 
     for (int i = height - N + 1; i <= height; i++) {
         const CBlockIndex* block = pindexLast->GetAncestor(i);
         const CBlockIndex* block_Prev = block->GetAncestor(i - 1);
 
-        if (block->GetBlockTime() > previous_max_timestamp) {
-            max_timestamp = block->GetBlockTime();
+        if (block->GetBlockTime() > previous_timestamp) {
+            this_timestamp = block->GetBlockTime();
         } else {
-            max_timestamp = previous_max_timestamp + 1;
+            this_timestamp = previous_timestamp + 1;
         }
 
-        int64_t solvetime = std::min(6 * T, max_timestamp - previous_max_timestamp);
+        int64_t solvetime = std::min(6 * T, this_timestamp - previous_timestamp);
 
         j++;
         t += solvetime * j; // Weighted solvetime sum.
@@ -221,11 +221,11 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
     const auto isHardfork = nHeight >= params.mbcHeight;
-    const auto isLwma2 = nHeight >= params.lwma2Height;
+    const auto isLwma2 = nHeight >= params.lwma2Height && nHeight < params.lwma3Height;
+    const auto isLwma3 = nHeight >= params.lwma3Height;
 
     // Pow limit start for warm-up period
-    if (isHardfork && nHeight < params.mbcHeight + params.nWarmUpWindow)
-    {
+    if (isHardfork && nHeight < params.mbcHeight + params.nWarmUpWindow) {
         return UintToArith256(params.powLimitStart).GetCompact();
     }
 
@@ -236,33 +236,35 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         : params.BitcoinDifficultyAdjustmentInterval();
 
     // Only change once per difficulty adjustment interval
-    if (nHeight % difficultyAdjustmentInterval != 0)
-    {
-        if (params.fPowAllowMinDifficultyBlocks)
-        {
+    if (nHeight % difficultyAdjustmentInterval != 0) {
+        if (params.fPowAllowMinDifficultyBlocks) {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2 * 10 minutes
             // then allow mining of a min-difficulty block.
             const auto powTargetSpacing = isHardfork ? params.nPowTargetSpacing : params.nBtcPowTargetSpacing;
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + powTargetSpacing * 2)
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + powTargetSpacing * 2) {
                 return nProofOfWorkLimit;
-            else
-            {
+            } else {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % difficultyAdjustmentInterval != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % difficultyAdjustmentInterval != 0 && pindex->nBits == nProofOfWorkLimit) {
                     pindex = pindex->pprev;
+                }
+
                 return pindex->nBits;
             }
         }
         return pindexLast->nBits;
     }
 
-    if (isLwma2)
-    {
+    if (isLwma2) {
         return Lwma2CalculateNextWorkRequired(pindexLast, params);
+    } else if (isLwma3) {
+        return Lwma3CalculateNextWorkRequired(pindexLast, params);
     } else {
-        return pblock->IsMicroBitcoin() ? DarkGravityWave3(pindexLast, params) : BitcoinNextWorkRequired(pindexLast, pblock, params);
+        return pblock->IsMicroBitcoin()
+            ? DarkGravityWave3(pindexLast, params)
+            : BitcoinNextWorkRequired(pindexLast, pblock, params);
     }
 }
 

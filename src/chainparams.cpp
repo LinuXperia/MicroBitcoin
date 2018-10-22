@@ -116,7 +116,8 @@ public:
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
         consensus.lwma2Height = 591000;
-        consensus.lwma2AveragingWindow = 90;
+        consensus.lwma3Height = 999999999;
+        consensus.lwmaAveragingWindow = 90;
         signSwithchTime = 1537387200;
 
         /**
@@ -246,7 +247,8 @@ public:
         consensus.premineAddress = "Vmd7hEpGhuKAzDYpq9qtbrf28pKKfULsbP";
 
         consensus.lwma2Height = 120;
-        consensus.lwma2AveragingWindow = 90;
+        consensus.lwma3Height = 999999999;
+        consensus.lwmaAveragingWindow = 90;
         signSwithchTime = 1537036775;
 
         pchBitcoinMessageStart[0] = 0x00;
@@ -345,7 +347,8 @@ public:
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
         consensus.lwma2Height = 200;
-        consensus.lwma2AveragingWindow = 90;
+        consensus.lwma3Height = 999999999;
+        consensus.lwmaAveragingWindow = 90;
         signSwithchTime = 1537036775;
 
         pchBitcoinMessageStart[0] = 0xfa;
