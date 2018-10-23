@@ -173,8 +173,8 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
             this_timestamp = previous_timestamp + 1;
         }
 
-        previous_timestamp = this_timestamp;
         int64_t solvetime = std::min(6 * T, this_timestamp - previous_timestamp);
+        previous_timestamp = this_timestamp;
 
         j++;
         t += solvetime * j; // Weighted solvetime sum.
