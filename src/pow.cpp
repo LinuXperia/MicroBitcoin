@@ -159,13 +159,12 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     int64_t t = 0, j = 0, solvetime_sum;
     int64_t this_timestamp, previous_timestamp;
 
-    const CBlockIndex* block_prev_max = block->GetAncestor(height - N);
-    previous_timestamp = block_prev_max->GetBlockTime();
+    const CBlockIndex* block_previous_timestamp = pindexLast->GetAncestor(height - N);
+    previous_timestamp = block_previous_timestamp->GetBlockTime();
 
     // Loop through N most recent blocks. 
     for (int i = height - N + 1; i <= height; i++) {
         const CBlockIndex* block = pindexLast->GetAncestor(i);
-        const CBlockIndex* block_Prev = block->GetAncestor(i - 1);
 
         if (block->GetBlockTime() > previous_timestamp) {
             this_timestamp = block->GetBlockTime();
@@ -173,6 +172,7 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
             this_timestamp = previous_timestamp + 1;
         }
 
+        previous_timestamp = this_timestamp;
         int64_t solvetime = std::min(6 * T, this_timestamp - previous_timestamp);
 
         j++;
@@ -193,7 +193,8 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     next_target = t * sum_target;
     
     // The following limits are the generous max that should reasonably occur.
-    next_target = std::max((previous_diff * 67) / 100, std::min(next_target, (previous_diff * 150) / 100));
+    if (next_target > (previous_diff * 150) / 100) { next_target = (previous_diff * 150) / 100; }
+    if ((previous_diff * 67) / 100 > next_target) { next_target = (previous_diff * 67); }
 
     if (solvetime_sum < (8 * T) / 10) {
         next_target = previous_diff * 100 / 106;
