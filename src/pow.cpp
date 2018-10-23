@@ -153,6 +153,7 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t N = params.lwmaAveragingWindow;
     const int64_t k = N * (N + 1) * T / 2;
     const int height = pindexLast->nHeight;
+    const arith_uint256 pow_limit = UintToArith256(params.powLimitStart);
     assert(height > N);
 
     arith_uint256 sum_target, previous_diff, next_target;
@@ -195,10 +196,8 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     // The following limits are the generous max that should reasonably occur.
     if (next_target > (previous_diff * 150) / 100) { next_target = (previous_diff * 150) / 100; }
     if ((previous_diff * 67) / 100 > next_target) { next_target = (previous_diff * 67); }
-
-    if (solvetime_sum < (8 * T) / 10) {
-        next_target = previous_diff * 100 / 106;
-    }
+    if (solvetime_sum < (8 * T) / 10) { next_target = previous_diff * 100 / 106; }
+    if (next_target > pow_limit) { next_target = pow_limit; }
 
     return next_target.GetCompact();
 }
