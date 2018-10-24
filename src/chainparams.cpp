@@ -210,9 +210,9 @@ public:
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
         consensus.BIP65Height = 2; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 2; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-        consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitStart = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nWarmUpWindow = 500000;
+        consensus.powLimit = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nWarmUpWindow = 1;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.nBtcPowTargetSpacing = 1 * 60;
@@ -246,18 +246,18 @@ public:
         consensus.premineValue = 10000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vmd7hEpGhuKAzDYpq9qtbrf28pKKfULsbP";
 
-        consensus.lwma2Height = 120;
-        consensus.lwma3Height = 999999999;
+        consensus.lwma2Height = 100;
+        consensus.lwma3Height = 200;
         consensus.lwmaAveragingWindow = 90;
         signSwithchTime = 1537036775;
 
-        pchBitcoinMessageStart[0] = 0x00;
+        pchBitcoinMessageStart[0] = 0x03;
         pchBitcoinMessageStart[1] = 0x10;
         pchBitcoinMessageStart[2] = 0x08;
         pchBitcoinMessageStart[3] = 0x06;
 
         pchMessageStart[0] = 0xf2;
-        pchMessageStart[1] = 0xb0;
+        pchMessageStart[1] = 0xb1;
         pchMessageStart[2] = 0xb4;
         pchMessageStart[3] = 0xd6;
 

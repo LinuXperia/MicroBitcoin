@@ -152,26 +152,22 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t T = params.nPowTargetSpacing;
     const int64_t N = params.lwmaAveragingWindow;
     const int64_t k = N * (N + 1) * T / 2;
-    const int height = pindexLast->nHeight;
+    const int64_t height = pindexLast->nHeight;
     const arith_uint256 pow_limit = UintToArith256(params.powLimitStart);
-    assert(height > N);
+    
+    if (height < N) { return pow_limit.GetCompact(); }
 
     arith_uint256 sum_target, previous_diff, next_target;
-    int64_t t = 0, j = 0, solvetime_sum;
     int64_t this_timestamp, previous_timestamp;
+    int64_t t = 0, j = 0, solvetime_sum;
 
     const CBlockIndex* block_previous_timestamp = pindexLast->GetAncestor(height - N);
     previous_timestamp = block_previous_timestamp->GetBlockTime();
 
     // Loop through N most recent blocks. 
-    for (int i = height - N + 1; i <= height; i++) {
+    for (int64_t i = height - N + 1; i <= height; i++) {
         const CBlockIndex* block = pindexLast->GetAncestor(i);
-
-        if (block->GetBlockTime() > previous_timestamp) {
-            this_timestamp = block->GetBlockTime();
-        } else {
-            this_timestamp = previous_timestamp + 1;
-        }
+        this_timestamp = (block->GetBlockTime() > previous_timestamp) ? block->GetBlockTime() : previous_timestamp + 1;
 
         int64_t solvetime = std::min(6 * T, this_timestamp - previous_timestamp);
         previous_timestamp = this_timestamp;
@@ -182,18 +178,12 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
         target.SetCompact(block->nBits);
         sum_target += target / (k * N);
 
-        if (i > height - 3) {
-            solvetime_sum += solvetime;
-        }
-        
-        if (i == height) {
-            previous_diff = target.SetCompact(block->nBits); // Latest block target
-        }
+        if (i > height - 3) { solvetime_sum += solvetime; }
+        if (i == height) { previous_diff = target.SetCompact(block->nBits); }
     }
 
     next_target = t * sum_target;
     
-    // The following limits are the generous max that should reasonably occur.
     if (next_target > (previous_diff * 150) / 100) { next_target = (previous_diff * 150) / 100; }
     if ((previous_diff * 67) / 100 > next_target) { next_target = (previous_diff * 67); }
     if (solvetime_sum < (8 * T) / 10) { next_target = previous_diff * 100 / 106; }
