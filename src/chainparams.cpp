@@ -241,13 +241,13 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        consensus.mbcHeight = 4;
+        consensus.mbcHeight = 2;
         consensus.mbcTimestamp = 1537036775;
         consensus.premineValue = 10000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vmd7hEpGhuKAzDYpq9qtbrf28pKKfULsbP";
 
-        consensus.lwma2Height = 100;
-        consensus.lwma3Height = 200;
+        consensus.lwma2Height = 999999999;
+        consensus.lwma3Height = 2;
         consensus.lwmaAveragingWindow = 90;
         signSwithchTime = 1537036775;
 
