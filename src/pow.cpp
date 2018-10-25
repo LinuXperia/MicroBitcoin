@@ -159,7 +159,7 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
 
     arith_uint256 sumTarget, previousDiff, nextTarget;
     int64_t thisTimestamp, previousTimestamp;
-    int64_t t = 0, j = 0, solvetimeSum;
+    int64_t t = 0, j = 0, solvetimeSum = 0;
 
     const CBlockIndex* blockPreviousTimestamp = pindexLast->GetAncestor(height - N);
     previousTimestamp = blockPreviousTimestamp->GetBlockTime();
