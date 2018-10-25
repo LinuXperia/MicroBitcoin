@@ -141,11 +141,11 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
 }
 
 // Copyright (c) 2017-2018 The Bitcoin Gold developers
-// Copyright (c) 2018 Zawy (M.I.T license continued)
+// Copyright (c) 2018 Zawy & MicroBitcoin (LWMA-3)
 // Algorithm by zawy, a modification of WT-144 by Tom Harding
-// Code by h4x3rotab of BTC Gold, modified/updated by zawy
-// Updated to LWMA3 by iamstenman
 // https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-388386175
+// Updated to LWMA3 by iamstenman
+// MIT License
 
 unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
