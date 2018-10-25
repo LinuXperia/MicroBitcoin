@@ -72,7 +72,8 @@ struct Params {
 
     int mbcHeight;
     int lwma2Height;
-    int lwma2AveragingWindow;
+    int lwma3Height;
+    int lwmaAveragingWindow;
     int64_t mbcTimestamp;
     std::string premineAddress;
     CAmount premineValue;
