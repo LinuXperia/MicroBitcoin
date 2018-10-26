@@ -4,11 +4,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "groestlcoin.h"
+#include <groestlcoin.h>
 
 
-#include "hash.h"
-#include "crypto/common.h"
+#include <hash.h>
+#include <crypto/common.h>
 
 using namespace std;
 

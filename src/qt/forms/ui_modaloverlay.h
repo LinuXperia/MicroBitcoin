@@ -22,7 +22,7 @@
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include "modaloverlay.h"
+#include "qt/modaloverlay.h"
 
 QT_BEGIN_NAMESPACE
 

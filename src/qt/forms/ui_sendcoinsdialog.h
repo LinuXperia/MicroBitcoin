@@ -28,8 +28,8 @@
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include "bitcoinamountfield.h"
-#include "qvalidatedlineedit.h"
+#include "qt/bitcoinamountfield.h"
+#include "qt/qvalidatedlineedit.h"
 
 QT_BEGIN_NAMESPACE
 

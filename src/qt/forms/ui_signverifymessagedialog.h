@@ -24,7 +24,7 @@
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include "qvalidatedlineedit.h"
+#include "qt/qvalidatedlineedit.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -20,7 +20,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QVBoxLayout>
-#include "qvalidatedlineedit.h"
+#include "qt/qvalidatedlineedit.h"
 
 QT_BEGIN_NAMESPACE
 

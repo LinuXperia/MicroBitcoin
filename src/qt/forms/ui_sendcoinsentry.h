@@ -22,8 +22,8 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QToolButton>
-#include "bitcoinamountfield.h"
-#include "qvalidatedlineedit.h"
+#include "qt/bitcoinamountfield.h"
+#include "qt/qvalidatedlineedit.h"
 
 QT_BEGIN_NAMESPACE
 

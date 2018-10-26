@@ -27,8 +27,8 @@
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include "qvalidatedlineedit.h"
-#include "qvaluecombobox.h"
+#include "qt/qvalidatedlineedit.h"
+#include "qt/qvaluecombobox.h"
 
 QT_BEGIN_NAMESPACE
 

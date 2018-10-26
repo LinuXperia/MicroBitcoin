@@ -21,7 +21,7 @@
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
-#include "receiverequestdialog.h"
+#include "qt/receiverequestdialog.h"
 
 QT_BEGIN_NAMESPACE
 

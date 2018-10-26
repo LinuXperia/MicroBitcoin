@@ -25,7 +25,7 @@
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include "bitcoinamountfield.h"
+#include "qt/bitcoinamountfield.h"
 
 QT_BEGIN_NAMESPACE
 

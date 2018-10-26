@@ -24,7 +24,7 @@
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QVBoxLayout>
-#include "coincontroltreewidget.h"
+#include "qt/coincontroltreewidget.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -21,7 +21,7 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QVBoxLayout>
-#include "qvalidatedlineedit.h"
+#include "qt/qvalidatedlineedit.h"
 
 QT_BEGIN_NAMESPACE
 

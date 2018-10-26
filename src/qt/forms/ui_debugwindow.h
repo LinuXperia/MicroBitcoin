@@ -28,7 +28,7 @@
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include "trafficgraphwidget.h"
+#include "qt/trafficgraphwidget.h"
 
 QT_BEGIN_NAMESPACE
 
