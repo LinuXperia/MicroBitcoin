@@ -135,7 +135,7 @@ bool ShutdownRequested()
  * chainstate, while keeping user interface out of the common library, which is shared
  * between microbitcoind, and microbitcoin-qt and non-server tools.
 */
-class CCoinsViewErrorCatcher : public CCoinsViewBacked
+class CCoinsViewErrorCatcher final : public CCoinsViewBacked
 {
 public:
     CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
