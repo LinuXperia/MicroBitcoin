@@ -116,7 +116,7 @@ public:
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
         consensus.lwma2Height = 591000;
-        consensus.lwma3Height = 999999999;
+        consensus.lwma3Height = 654000;
         consensus.lwmaAveragingWindow = 90;
         signSwithchTime = 1537387200;
 
