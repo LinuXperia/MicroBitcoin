@@ -305,10 +305,11 @@ class BIP68Test(BitcoinTestFramework):
             block = create_block(tip, create_coinbase(height), cur_time)
             block.nVersion = 3
             block.rehash()
+            add_witness_commitment(block)
             block.solve()
             tip = block.sha256
             height += 1
-            self.nodes[0].submitblock(ToHex(block))
+            self.nodes[0].submitblock(bytes_to_hex_str(block.serialize(True)))
             cur_time += 1
 
         mempool = self.nodes[0].getrawmempool()

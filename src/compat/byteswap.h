@@ -6,7 +6,7 @@
 #define BITCOIN_COMPAT_BYTESWAP_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/bitcoin-config.h>
 #endif
 
 #include <stdint.h>
@@ -35,7 +35,7 @@
 #if HAVE_DECL_BSWAP_16 == 0
 inline uint16_t bswap_16(uint16_t x)
 {
-    return (x >> 8) | ((x & 0x00ff) << 8);
+    return (x >> 8) | (x << 8);
 }
 #endif // HAVE_DECL_BSWAP16
 

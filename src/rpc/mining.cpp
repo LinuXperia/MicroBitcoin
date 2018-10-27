@@ -3,28 +3,28 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "amount.h"
-#include "chain.h"
-#include "chainparams.h"
-#include "consensus/consensus.h"
-#include "consensus/params.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "validation.h"
-#include "miner.h"
-#include "net.h"
-#include "policy/fees.h"
-#include "pow.h"
-#include "rpc/blockchain.h"
-#include "rpc/mining.h"
-#include "rpc/server.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "validationinterface.h"
-#include "warnings.h"
+#include <base58.h>
+#include <amount.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <consensus/consensus.h>
+#include <consensus/params.h>
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <init.h>
+#include <validation.h>
+#include <miner.h>
+#include <net.h>
+#include <policy/fees.h>
+#include <pow.h>
+#include <rpc/blockchain.h>
+#include <rpc/mining.h>
+#include <rpc/server.h>
+#include <txmempool.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <validationinterface.h>
+#include <warnings.h>
 
 #include <memory>
 #include <stdint.h>
@@ -176,12 +176,13 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
         nMaxTries = request.params[2].get_int();
     }
 
-    CBitcoinAddress address(request.params[1].get_str());
-    if (!address.IsValid())
+    CTxDestination destination = DecodeDestination(request.params[1].get_str());
+    if (!IsValidDestination(destination)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
+    }
 
     std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
-    coinbaseScript->reserveScript = GetScriptForDestination(address.Get());
+    coinbaseScript->reserveScript = GetScriptForDestination(destination);
 
     return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
 }
@@ -198,10 +199,11 @@ UniValue getmininginfo(const JSONRPCRequest& request)
             "  \"currentblockweight\": nnn, (numeric) The last block weight\n"
             "  \"currentblocktx\": nnn,     (numeric) The last block transaction\n"
             "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
-            "  \"errors\": \"...\"            (string) Current errors\n"
             "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
             "  \"pooledtx\": n              (numeric) The size of the mempool\n"
             "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
+            "  \"warnings\": \"...\"          (string) any network and blockchain warnings\n"
+            "  \"errors\": \"...\"            (string) DEPRECATED. Same as warnings. Only shown when bitcoind is started with -deprecatedrpc=getmininginfo\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmininginfo", "")
@@ -216,10 +218,14 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     obj.push_back(Pair("currentblockweight", (uint64_t)nLastBlockWeight));
     obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
-    obj.push_back(Pair("errors",           GetWarnings("statusbar")));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(request)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
+    if (IsDeprecatedRPCEnabled("getmininginfo")) {
+        obj.push_back(Pair("errors",       GetWarnings("statusbar")));
+    } else {
+        obj.push_back(Pair("warnings",     GetWarnings("statusbar")));
+    }
     return obj;
 }
 
@@ -542,42 +548,39 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     std::map<uint256, int64_t> setTxIndex;
     int i = 0;
 
-    if (pindexPrev->nHeight < Params().GetConsensus().lwma2Height - 5 || pindexPrev->nHeight > Params().GetConsensus().lwma2Height)
-    {
-        for (const auto& it : pblock->vtx) {
-            const CTransaction& tx = *it;
-            uint256 txHash = tx.GetHash();
-            setTxIndex[txHash] = i++;
+    for (const auto& it : pblock->vtx) {
+        const CTransaction& tx = *it;
+        uint256 txHash = tx.GetHash();
+        setTxIndex[txHash] = i++;
 
-            if (tx.IsCoinBase())
-                continue;
+        if (tx.IsCoinBase())
+            continue;
 
-            UniValue entry(UniValue::VOBJ);
+        UniValue entry(UniValue::VOBJ);
 
-            entry.push_back(Pair("data", EncodeHexTx(tx)));
-            entry.push_back(Pair("txid", txHash.GetHex()));
-            entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
+        entry.push_back(Pair("data", EncodeHexTx(tx)));
+        entry.push_back(Pair("txid", txHash.GetHex()));
+        entry.push_back(Pair("hash", tx.GetWitnessHash().GetHex()));
 
-            UniValue deps(UniValue::VARR);
-            for (const CTxIn &in : tx.vin)
-            {
-                if (setTxIndex.count(in.prevout.hash))
-                    deps.push_back(setTxIndex[in.prevout.hash]);
-            }
-            entry.push_back(Pair("depends", deps));
-
-            int index_in_template = i - 1;
-            entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
-            int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
-            if (fPreSegWit) {
-                assert(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
-                nTxSigOps /= WITNESS_SCALE_FACTOR;
-            }
-            entry.push_back(Pair("sigops", nTxSigOps));
-            entry.push_back(Pair("weight", GetTransactionWeight(tx)));
-
-            transactions.push_back(entry);
+        UniValue deps(UniValue::VARR);
+        for (const CTxIn &in : tx.vin)
+        {
+            if (setTxIndex.count(in.prevout.hash))
+                deps.push_back(setTxIndex[in.prevout.hash]);
         }
+        entry.push_back(Pair("depends", deps));
+
+        int index_in_template = i - 1;
+        entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
+        int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
+        if (fPreSegWit) {
+            assert(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
+            nTxSigOps /= WITNESS_SCALE_FACTOR;
+        }
+        entry.push_back(Pair("sigops", nTxSigOps));
+        entry.push_back(Pair("weight", GetTransactionWeight(tx)));
+
+        transactions.push_back(entry);
     }
 
     UniValue aux(UniValue::VOBJ);
@@ -800,6 +803,12 @@ UniValue estimatefee(const JSONRPCRequest& request)
             + HelpExampleCli("estimatefee", "6")
             );
 
+    if (!IsDeprecatedRPCEnabled("estimatefee")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "estimatefee is deprecated and will be fully removed in v0.17. "
+            "To use estimatefee in v0.16, restart bitcoind with -deprecatedrpc=estimatefee.\n"
+            "Projects should transition to using estimatesmartfee before upgrading to v0.17");
+    }
+
     RPCTypeCheck(request.params, {UniValue::VNUM});
 
     int nBlocks = request.params[0].get_int();
@@ -977,20 +986,20 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
+{ //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "mining",             "getnetworkhashps",       &getnetworkhashps,       true,  {"nblocks","height"} },
-    { "mining",             "getmininginfo",          &getmininginfo,          true,  {} },
-    { "mining",             "prioritisetransaction",  &prioritisetransaction,  true,  {"txid","dummy","fee_delta"} },
-    { "mining",             "getblocktemplate",       &getblocktemplate,       true,  {"template_request"} },
-    { "mining",             "submitblock",            &submitblock,            true,  {"hexdata","dummy"} },
+    { "mining",             "getnetworkhashps",       &getnetworkhashps,       {"nblocks","height"} },
+    { "mining",             "getmininginfo",          &getmininginfo,          {} },
+    { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","dummy","fee_delta"} },
+    { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
+    { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
 
-    { "generating",         "generatetoaddress",      &generatetoaddress,      true,  {"nblocks","address","maxtries"} },
+    { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
 
-    { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"conf_target", "estimate_mode"} },
+    { "util",               "estimatefee",            &estimatefee,            {"nblocks"} },
+    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
-    { "hidden",             "estimaterawfee",         &estimaterawfee,         true,  {"conf_target", "threshold"} },
+    { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };
 
 void RegisterMiningRPCCommands(CRPCTable &t)

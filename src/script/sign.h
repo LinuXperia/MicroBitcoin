@@ -7,7 +7,7 @@
 #ifndef BITCOIN_SCRIPT_SIGN_H
 #define BITCOIN_SCRIPT_SIGN_H
 
-#include "script/interpreter.h"
+#include <script/interpreter.h>
 
 class CKeyID;
 class CKeyStore;
@@ -82,5 +82,11 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
 /** Extract signature data from a transaction, and insert it. */
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn);
 void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data);
+
+/* Check whether we know how to sign for an output like this, assuming we
+ * have all private keys. While this function does not need private keys, the passed
+ * keystore is used to look up public keys and redeemscripts by hash.
+ * Solvability is unrelated to whether we consider this output to be ours. */
+bool IsSolvable(const CKeyStore& store, const CScript& script);
 
 #endif // BITCOIN_SCRIPT_SIGN_H

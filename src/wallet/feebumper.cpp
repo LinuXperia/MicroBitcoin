@@ -2,18 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "consensus/validation.h"
-#include "wallet/coincontrol.h"
-#include "wallet/feebumper.h"
-#include "wallet/wallet.h"
-#include "policy/fees.h"
-#include "policy/policy.h"
-#include "policy/rbf.h"
-#include "validation.h" //for mempool access
-#include "txmempool.h"
-#include "utilmoneystr.h"
-#include "util.h"
-#include "net.h"
+#include <consensus/validation.h>
+#include <wallet/coincontrol.h>
+#include <wallet/feebumper.h>
+#include <wallet/fees.h>
+#include <wallet/wallet.h>
+#include <policy/fees.h>
+#include <policy/policy.h>
+#include <policy/rbf.h>
+#include <validation.h> //for mempool access
+#include <txmempool.h>
+#include <utilmoneystr.h>
+#include <util.h>
+#include <net.h>
 
 // Calculate the size of the transaction assuming all signatures are max size
 // Use DummySignatureCreator, which inserts 72 byte signatures everywhere.
@@ -76,19 +77,19 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
     vErrors.clear();
     bumpedTxid.SetNull();
     AssertLockHeld(pWallet->cs_wallet);
-    if (!pWallet->mapWallet.count(txid)) {
+    auto it = pWallet->mapWallet.find(txid);
+    if (it == pWallet->mapWallet.end()) {
         vErrors.push_back("Invalid or non-wallet transaction id");
         currentResult = BumpFeeResult::INVALID_ADDRESS_OR_KEY;
         return;
     }
-    auto it = pWallet->mapWallet.find(txid);
     const CWalletTx& wtx = it->second;
 
     if (!preconditionChecks(pWallet, wtx)) {
         return;
     }
 
-    if (!SignalsOptInRBF(wtx)) {
+    if (!SignalsOptInRBF(*wtx.tx)) {
         vErrors.push_back("Transaction is not BIP 125 replaceable");
         currentResult = BumpFeeResult::WALLET_ERROR;
         return;
@@ -102,7 +103,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
 
     // check that original tx consists entirely of our inputs
     // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
-    if (!pWallet->IsAllFromMe(wtx, ISMINE_SPENDABLE)) {
+    if (!pWallet->IsAllFromMe(*wtx.tx, ISMINE_SPENDABLE)) {
         vErrors.push_back("Transaction contains inputs that don't belong to this wallet");
         currentResult = BumpFeeResult::WALLET_ERROR;
         return;
@@ -156,7 +157,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
             currentResult = BumpFeeResult::INVALID_PARAMETER;
             return;
         }
-        CAmount requiredFee = CWallet::GetRequiredFee(maxNewTxSize);
+        CAmount requiredFee = GetRequiredFee(maxNewTxSize);
         if (totalFee < requiredFee) {
             vErrors.push_back(strprintf("Insufficient totalFee (cannot be less than required fee %s)",
                                                                 FormatMoney(requiredFee)));
@@ -166,7 +167,7 @@ CFeeBumper::CFeeBumper(const CWallet *pWallet, const uint256 txidIn, const CCoin
         nNewFee = totalFee;
         nNewFeeRate = CFeeRate(totalFee, maxNewTxSize);
     } else {
-        nNewFee = CWallet::GetMinimumFee(maxNewTxSize, coin_control, mempool, ::feeEstimator, nullptr /* FeeCalculation */);
+        nNewFee = GetMinimumFee(maxNewTxSize, coin_control, mempool, ::feeEstimator, nullptr /* FeeCalculation */);
         nNewFeeRate = CFeeRate(nNewFee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
@@ -241,12 +242,13 @@ bool CFeeBumper::commit(CWallet *pWallet)
     if (!vErrors.empty() || currentResult != BumpFeeResult::OK) {
         return false;
     }
-    if (txid.IsNull() || !pWallet->mapWallet.count(txid)) {
+    auto it = txid.IsNull() ? pWallet->mapWallet.end() : pWallet->mapWallet.find(txid);
+    if (it == pWallet->mapWallet.end()) {
         vErrors.push_back("Invalid or non-wallet transaction id");
         currentResult = BumpFeeResult::MISC_ERROR;
         return false;
     }
-    CWalletTx& oldWtx = pWallet->mapWallet[txid];
+    CWalletTx& oldWtx = it->second;
 
     // make sure the transaction still has no descendants and hasn't been mined in the meantime
     if (!preconditionChecks(pWallet, oldWtx)) {

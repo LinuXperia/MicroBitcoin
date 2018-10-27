@@ -15,28 +15,32 @@ from test_framework.util import assert_equal, assert_raises_rpc_error
 class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 1
-        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3']]
+        self.num_nodes = 2
+        self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3', '-wallet=w'], []] 
 
     def run_test(self):
         assert_equal(set(self.nodes[0].listwallets()), {"w1", "w2", "w3"})
 
-        self.stop_node(0)
+        self.stop_nodes()
+
+        self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
+        self.assert_start_raises_init_error(0, ['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
+        self.assert_start_raises_init_error(0, ['-walletdir=debug.log'], 'Error: Specified -walletdir "debug.log" is not a directory', cwd=data_dir())
 
         # should not initialize if there are duplicate wallets
         self.assert_start_raises_init_error(0, ['-wallet=w1', '-wallet=w1'], 'Error loading wallet w1. Duplicate -wallet filename specified.')
 
         # should not initialize if wallet file is a directory
-        os.mkdir(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w11'))
+        wallet_dir = os.path.join(self.options.tmpdir, 'node0', 'regtest', 'wallets')
+        os.mkdir(os.path.join(wallet_dir, 'w11'))
         self.assert_start_raises_init_error(0, ['-wallet=w11'], 'Error loading wallet w11. -wallet filename must be a regular file.')
 
         # should not initialize if one wallet is a copy of another
-        shutil.copyfile(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w2'),
-                        os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w22'))
+        shutil.copyfile(os.path.join(wallet_dir, 'w2'), os.path.join(wallet_dir, 'w22'))
         self.assert_start_raises_init_error(0, ['-wallet=w2', '-wallet=w22'], 'duplicates fileid')
 
         # should not initialize if wallet file is a symlink
-        os.symlink(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w1'), os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w12'))
+        os.symlink(os.path.join(wallet_dir, 'w1'), os.path.join(wallet_dir, 'w12'))
         self.assert_start_raises_init_error(0, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
 
         self.start_node(0, self.extra_args[0])

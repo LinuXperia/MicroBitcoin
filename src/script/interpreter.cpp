@@ -4,15 +4,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "interpreter.h"
+#include <script/interpreter.h>
 
-#include "primitives/transaction.h"
-#include "crypto/ripemd160.h"
-#include "crypto/sha1.h"
-#include "crypto/sha256.h"
-#include "pubkey.h"
-#include "script/script.h"
-#include "uint256.h"
+#include <primitives/transaction.h>
+#include <crypto/ripemd160.h>
+#include <crypto/sha1.h>
+#include <crypto/sha256.h>
+#include <pubkey.h>
+#include <script/script.h>
+#include <uint256.h>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -236,7 +236,7 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
         bool usesForkId = GetHashType(vchSig) & SIGHASH_FORKID;
         bool forkIdEnabled = flags & SCRIPT_ENABLE_SIGHASH_FORKID;
 
-        // Old reply protection
+        // Old replay protection
         if (!forkIdOldEnabled && usesForkIdOld && !forkIdEnabled) {
             return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID_OLD);
         }
@@ -244,7 +244,7 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
             return set_error(serror, SCRIPT_ERR_MUST_USE_FORKID_OLD);
         }
 
-        // Reply protection
+        // Replay protection
         if (!forkIdEnabled && !forkIdOldEnabled && usesForkId) {
             return set_error(serror, SCRIPT_ERR_ILLEGAL_FORKID);
         }
@@ -396,9 +396,6 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
                         // not enabled; treat as a NOP2
-                        if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) {
-                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
-                        }
                         break;
                     }
 
@@ -438,9 +435,6 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 {
                     if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
                         // not enabled; treat as a NOP3
-                        if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS) {
-                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
-                        }
                         break;
                     }
 
@@ -1215,29 +1209,36 @@ uint256 GetOutputsHash(const CTransaction& txTo) {
 
 PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
 {
-    hashPrevouts = GetPrevoutHash(txTo);
-    hashSequence = GetSequenceHash(txTo);
-    hashOutputs = GetOutputsHash(txTo);
+    // Cache is calculated only for transactions with witness
+    if (txTo.HasWitness()) {
+        hashPrevouts = GetPrevoutHash(txTo);
+        hashSequence = GetSequenceHash(txTo);
+        hashOutputs = GetOutputsHash(txTo);
+        ready = true;
+    }
 }
 
 uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
 {
+    assert(nIn < txTo.vin.size());
+
     if (sigversion == SIGVERSION_WITNESS_V0) {
         uint256 hashPrevouts;
         uint256 hashSequence;
         uint256 hashOutputs;
 
+        const bool cacheready = cache && cache->ready;
+
         if (!(nHashType & SIGHASH_ANYONECANPAY)) {
-            hashPrevouts = cache ? cache->hashPrevouts : GetPrevoutHash(txTo);
+            hashPrevouts = cacheready ? cache->hashPrevouts : GetPrevoutHash(txTo);
         }
 
         if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
-            hashSequence = cache ? cache->hashSequence : GetSequenceHash(txTo);
+            hashSequence = cacheready ? cache->hashSequence : GetSequenceHash(txTo);
         }
 
-
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
-            hashOutputs = cache ? cache->hashOutputs : GetOutputsHash(txTo);
+            hashOutputs = cacheready ? cache->hashOutputs : GetOutputsHash(txTo);
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
             CHashWriter ss(SER_GETHASH, 0);
             ss << txTo.vout[nIn];
@@ -1268,10 +1269,6 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     }
 
     static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
-    if (nIn >= txTo.vin.size()) {
-        //  nIn out of range
-        return one;
-    }
 
     // Check for invalid use of SIGHASH_SINGLE
     if ((nHashType & 0x1f) == SIGHASH_SINGLE) {

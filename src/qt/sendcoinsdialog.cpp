@@ -2,27 +2,27 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "sendcoinsdialog.h"
-#include "ui_sendcoinsdialog.h"
+#include <qt/sendcoinsdialog.h>
+#include <qt/forms/ui_sendcoinsdialog.h>
 
-#include "addresstablemodel.h"
-#include "bitcoinunits.h"
-#include "clientmodel.h"
-#include "coincontroldialog.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "platformstyle.h"
-#include "sendcoinsentry.h"
-#include "walletmodel.h"
+#include <qt/addresstablemodel.h>
+#include <qt/bitcoinunits.h>
+#include <qt/clientmodel.h>
+#include <qt/coincontroldialog.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/sendcoinsentry.h>
+#include <qt/walletmodel.h>
 
-#include "base58.h"
-#include "chainparams.h"
-#include "wallet/coincontrol.h"
-#include "validation.h" // mempool and minRelayTxFee
-#include "ui_interface.h"
-#include "txmempool.h"
-#include "policy/fees.h"
-#include "wallet/wallet.h"
+#include <base58.h>
+#include <chainparams.h>
+#include <wallet/coincontrol.h>
+#include <validation.h> // mempool and minRelayTxFee
+#include <ui_interface.h>
+#include <txmempool.h>
+#include <policy/fees.h>
+#include <wallet/fees.h>
 
 #include <QFontMetrics>
 #include <QMessageBox>
@@ -178,7 +178,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
         connect(ui->optInRBF, SIGNAL(stateChanged(int)), this, SLOT(updateSmartFeeLabel()));
         connect(ui->optInRBF, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
-        ui->customFee->setSingleStep(CWallet::GetRequiredFee(1000));
+        ui->customFee->setSingleStep(GetRequiredFee(1000));
         updateFeeSectionControls();
         updateMinFeeLabel();
         updateSmartFeeLabel();
@@ -601,7 +601,7 @@ void SendCoinsDialog::on_buttonMinimizeFee_clicked()
 
 void SendCoinsDialog::setMinimumFee()
 {
-    ui->customFee->setValue(CWallet::GetRequiredFee(1000));
+    ui->customFee->setValue(GetRequiredFee(1000));
 }
 
 void SendCoinsDialog::updateFeeSectionControls()
@@ -633,7 +633,7 @@ void SendCoinsDialog::updateMinFeeLabel()
 {
     if (model && model->getOptionsModel())
         ui->checkBoxMinimumFee->setText(tr("Pay only the required fee of %1").arg(
-            BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), CWallet::GetRequiredFee(1000)) + "/kB")
+            BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetRequiredFee(1000)) + "/kB")
         );
 }
 
@@ -658,7 +658,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     updateCoinControlState(coin_control);
     coin_control.m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     FeeCalculation feeCalc;
-    CFeeRate feeRate = CFeeRate(CWallet::GetMinimumFee(10, coin_control, ::mempool, ::feeEstimator, &feeCalc));
+    CFeeRate feeRate = CFeeRate(GetMinimumFee(100, coin_control, ::mempool, ::feeEstimator, &feeCalc));
 
     ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
 
@@ -767,19 +767,18 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         CoinControlDialog::coinControl->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
 
-        CBitcoinAddress addr = CBitcoinAddress(text.toStdString());
+        const CTxDestination dest = DecodeDestination(text.toStdString());
 
         if (text.isEmpty()) // Nothing entered
         {
             ui->labelCoinControlChangeLabel->setText("");
         }
-        else if (!addr.IsValid()) // Invalid address
+        else if (!IsValidDestination(dest)) // Invalid address
         {
             ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid MicroBitcoin address"));
         }
         else // Valid address
         {
-            const CTxDestination dest = addr.Get();
             if (!model->IsSpendable(dest)) {
                 ui->labelCoinControlChangeLabel->setText(tr("Warning: Unknown change address"));
 

@@ -2,8 +2,8 @@ dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 16)
-define(_CLIENT_VERSION_REVISION, 2)
-define(_CLIENT_VERSION_BUILD, 2)
+define(_CLIENT_VERSION_REVISION, 3)
+define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2018)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
@@ -162,7 +162,7 @@ AC_ARG_ENABLE([ccache],
 AC_ARG_ENABLE([lcov],
   [AS_HELP_STRING([--enable-lcov],
   [enable lcov testing (default is no)])],
-  [use_lcov=yes],
+  [use_lcov=$enableval],
   [use_lcov=no])
   
 AC_ARG_ENABLE([lcov-branch-coverage],
@@ -737,6 +737,9 @@ define(MINIMUM_REQUIRED_BOOST, 1.47.0)
 
 dnl Check for boost libs
 AX_BOOST_BASE([MINIMUM_REQUIRED_BOOST])
+if test x$want_boost = xno; then
+    AC_MSG_ERROR([[only libbitcoinconsensus can be built without boost]])
+fi
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_PROGRAM_OPTIONS

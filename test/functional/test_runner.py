@@ -77,6 +77,7 @@ BASE_SCRIPTS= [
     'abandonconflict.py',
     'bip68-112-113-p2p.py',
     'rawtransactions.py',
+    'address_types.py',
     'reindex.py',
     # vv Tests less than 30s vv
     'keypool-topup.py',
@@ -85,6 +86,7 @@ BASE_SCRIPTS= [
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
+    'txn_clone.py --segwit',
     'getchaintips.py',
     'rest.py',
     'mempool_spendcoinbase.py',
@@ -98,6 +100,7 @@ BASE_SCRIPTS= [
     'disconnect_ban.py',
     'decodescript.py',
     'blockchain.py',
+    'deprecated_rpc.py',
     'disablewallet.py',
     'net.py',
     'keypool.py',
@@ -123,6 +126,7 @@ BASE_SCRIPTS= [
     'resendwallettransactions.py',
     'minchainwork.py',
     'p2p-acceptblock.py',
+    'node_network_limited.py',
 ]
 
 EXTENDED_SCRIPTS = [

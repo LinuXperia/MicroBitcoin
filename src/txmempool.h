@@ -14,13 +14,13 @@
 #include <utility>
 #include <string>
 
-#include "amount.h"
-#include "coins.h"
-#include "indirectmap.h"
-#include "policy/feerate.h"
-#include "primitives/transaction.h"
-#include "sync.h"
-#include "random.h"
+#include <amount.h>
+#include <coins.h>
+#include <indirectmap.h>
+#include <policy/feerate.h>
+#include <primitives/transaction.h>
+#include <sync.h>
+#include <random.h>
 
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -50,87 +50,6 @@ struct LockPoints
 };
 
 class CTxMemPool;
-
-struct CSpentIndexKeyCompare
-{
-    bool operator()(const CSpentIndexKey& a, const CSpentIndexKey& b) const {
-        if (a.txid == b.txid) {
-            return a.outputIndex < b.outputIndex;
-        } else {
-            return a.txid < b.txid;
-        }
-    }
-};
-
-struct CMempoolAddressDelta
-{
-    int64_t time;
-    CAmount amount;
-    uint256 prevhash;
-    unsigned int prevout;
-
-    CMempoolAddressDelta(int64_t t, CAmount a, uint256 hash, unsigned int out) {
-        time = t;
-        amount = a;
-        prevhash = hash;
-        prevout = out;
-    }
-
-    CMempoolAddressDelta(int64_t t, CAmount a) {
-        time = t;
-        amount = a;
-        prevhash.SetNull();
-        prevout = 0;
-    }
-};
-
-struct CMempoolAddressDeltaKey
-{
-    int type;
-    uint160 addressBytes;
-    uint256 txhash;
-    unsigned int index;
-    int spending;
-
-    CMempoolAddressDeltaKey(int addressType, uint160 addressHash, uint256 hash, unsigned int i, int s) {
-        type = addressType;
-        addressBytes = addressHash;
-        txhash = hash;
-        index = i;
-        spending = s;
-    }
-
-    CMempoolAddressDeltaKey(int addressType, uint160 addressHash) {
-        type = addressType;
-        addressBytes = addressHash;
-        txhash.SetNull();
-        index = 0;
-        spending = 0;
-    }
-};
-
-struct CMempoolAddressDeltaKeyCompare
-{
-    bool operator()(const CMempoolAddressDeltaKey& a, const CMempoolAddressDeltaKey& b) const {
-        if (a.type == b.type) {
-            if (a.addressBytes == b.addressBytes) {
-                if (a.txhash == b.txhash) {
-                    if (a.index == b.index) {
-                        return a.spending < b.spending;
-                    } else {
-                        return a.index < b.index;
-                    }
-                } else {
-                    return a.txhash < b.txhash;
-                }
-            } else {
-                return a.addressBytes < b.addressBytes;
-            }
-        } else {
-            return a.type < b.type;
-        }
-    }
-};
 
 /** \class CTxMemPoolEntry
  *
@@ -194,7 +113,7 @@ public:
     // Adjusts the descendant state.
     void UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);
     // Adjusts the ancestor state
-    void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int modifySigOps);
+    void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
     // Updates the fee delta used for mining priority score, and the
     // modified fees with descendants.
     void UpdateFeeDelta(int64_t feeDelta);
@@ -291,18 +210,14 @@ class CompareTxMemPoolEntryByDescendantScore
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
     {
-        bool fUseADescendants = UseDescendantScore(a);
-        bool fUseBDescendants = UseDescendantScore(b);
+        double a_mod_fee, a_size, b_mod_fee, b_size;
 
-        double aModFee = fUseADescendants ? a.GetModFeesWithDescendants() : a.GetModifiedFee();
-        double aSize = fUseADescendants ? a.GetSizeWithDescendants() : a.GetTxSize();
-
-        double bModFee = fUseBDescendants ? b.GetModFeesWithDescendants() : b.GetModifiedFee();
-        double bSize = fUseBDescendants ? b.GetSizeWithDescendants() : b.GetTxSize();
+        GetModFeeAndSize(a, a_mod_fee, a_size);
+        GetModFeeAndSize(b, b_mod_fee, b_size);
 
         // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
-        double f1 = aModFee * bSize;
-        double f2 = aSize * bModFee;
+        double f1 = a_mod_fee * b_size;
+        double f2 = a_size * b_mod_fee;
 
         if (f1 == f2) {
             return a.GetTime() >= b.GetTime();
@@ -310,12 +225,21 @@ public:
         return f1 < f2;
     }
 
-    // Calculate which score to use for an entry (avoiding division).
-    bool UseDescendantScore(const CTxMemPoolEntry &a) const
+    // Return the fee/size we're using for sorting this entry.
+    void GetModFeeAndSize(const CTxMemPoolEntry &a, double &mod_fee, double &size) const
     {
+        // Compare feerate with descendants to feerate of the transaction, and
+        // return the fee/size for the max.
         double f1 = (double)a.GetModifiedFee() * a.GetSizeWithDescendants();
         double f2 = (double)a.GetModFeesWithDescendants() * a.GetTxSize();
-        return f2 > f1;
+
+        if (f2 > f1) {
+            mod_fee = a.GetModFeesWithDescendants();
+            size = a.GetSizeWithDescendants();
+        } else {
+            mod_fee = a.GetModifiedFee();
+            size = a.GetTxSize();
+        }
     }
 };
 
@@ -346,20 +270,25 @@ public:
     }
 };
 
+
+/** \class CompareTxMemPoolEntryByAncestorScore
+ *
+ *  Sort an entry by min(score/size of entry's tx, score/size with all ancestors).
+ */
 class CompareTxMemPoolEntryByAncestorFee
 {
 public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
+    template<typename T>
+    bool operator()(const T& a, const T& b) const
     {
-        double aFees = a.GetModFeesWithAncestors();
-        double aSize = a.GetSizeWithAncestors();
+        double a_mod_fee, a_size, b_mod_fee, b_size;
 
-        double bFees = b.GetModFeesWithAncestors();
-        double bSize = b.GetSizeWithAncestors();
+        GetModFeeAndSize(a, a_mod_fee, a_size);
+        GetModFeeAndSize(b, b_mod_fee, b_size);
 
         // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
-        double f1 = aFees * bSize;
-        double f2 = aSize * bFees;
+        double f1 = a_mod_fee * b_size;
+        double f2 = a_size * b_mod_fee;
 
         if (f1 == f2) {
             return a.GetTx().GetHash() < b.GetTx().GetHash();
@@ -367,12 +296,28 @@ public:
 
         return f1 > f2;
     }
+
+    // Return the fee/size we're using for sorting this entry.
+    template <typename T>
+    void GetModFeeAndSize(const T &a, double &mod_fee, double &size) const
+    {
+        // Compare feerate with ancestors to feerate of the transaction, and
+        // return the fee/size for the min.
+        double f1 = (double)a.GetModifiedFee() * a.GetSizeWithAncestors();
+        double f2 = (double)a.GetModFeesWithAncestors() * a.GetTxSize();
+        if (f1 > f2) {
+            mod_fee = a.GetModFeesWithAncestors();
+            size = a.GetSizeWithAncestors();
+        } else {
+            mod_fee = a.GetModifiedFee();
+            size = a.GetTxSize();
+        }
+    }
 };
 
 // Multi_index tag names
 struct descendant_score {};
 struct entry_time {};
-struct mining_score {};
 struct ancestor_score {};
 
 class CBlockPolicyEstimator;
@@ -441,7 +386,6 @@ public:
  * - transaction hash
  * - feerate [we use max(feerate of tx, feerate of tx with all descendants)]
  * - time in mempool
- * - mining score (feerate modified by any fee deltas from PrioritiseTransaction)
  *
  * Note: the term "descendant" refers to in-mempool transactions that depend on
  * this one, while "ancestor" refers to in-mempool transactions that a given
@@ -531,12 +475,6 @@ public:
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByEntryTime
             >,
-            // sorted by score (for mining prioritization)
-            boost::multi_index::ordered_unique<
-                boost::multi_index::tag<mining_score>,
-                boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByScore
-            >,
             // sorted by fee rate with ancestors
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::tag<ancestor_score>,
@@ -572,19 +510,6 @@ private:
     typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
     txlinksMap mapLinks;
 
-    typedef std::map<CMempoolAddressDeltaKey, CMempoolAddressDelta, CMempoolAddressDeltaKeyCompare> addressDeltaMap;
-    addressDeltaMap mapAddress;
-
-    typedef std::map<uint256, std::vector<CMempoolAddressDeltaKey> > addressDeltaMapInserted;
-	
-    addressDeltaMapInserted mapAddressInserted;
-
-    typedef std::map<CSpentIndexKey, CSpentIndexValue, CSpentIndexKeyCompare> mapSpentIndex;
-    mapSpentIndex mapSpent;
-
-    typedef std::map<uint256, std::vector<CSpentIndexKey> > mapSpentIndexInserted;
-    mapSpentIndexInserted mapSpentInserted;
-
     void UpdateParent(txiter entry, txiter parent, bool add);
     void UpdateChild(txiter entry, txiter child, bool add);
 
@@ -605,24 +530,17 @@ public:
      * check does nothing.
      */
     void check(const CCoinsViewCache *pcoins) const;
-    void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = dFrequency * 4294967295.0; }
+    void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = static_cast<uint32_t>(dFrequency * 4294967295.0); }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
     // to track size/count of descendant transactions.  First version of
     // addUnchecked can be used to have it call CalculateMemPoolAncestors(), and
     // then invoke the second version.
+    // Note that addUnchecked is ONLY called from ATMP outside of tests
+    // and any other callers may break wallet's in-mempool tracking (due to
+    // lack of CValidationInterface::TransactionAddedToMempool callbacks).
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool validFeeEstimate = true);
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate = true);
-
-    void addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
-    bool getAddressIndex(std::vector<std::pair<uint160, int> > &addresses,
-                         std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > &results);
-    bool removeAddressIndex(const uint256 txhash);
-
-	
-    void addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
-    bool getSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
-    bool removeSpentIndex(const uint256 txhash);
 
     void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);

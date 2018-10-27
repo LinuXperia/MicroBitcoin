@@ -5,17 +5,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/bitcoin-config.h>
 #endif
 
-#include "util.h"
+#include <util.h>
 
-#include "chainparamsbase.h"
-#include "fs.h"
-#include "random.h"
-#include "serialize.h"
-#include "utilstrencodings.h"
-#include "utiltime.h"
+#include <chainparamsbase.h>
+#include <fs.h>
+#include <random.h>
+#include <serialize.h>
+#include <utilstrencodings.h>
+#include <utiltime.h>
 
 #include <stdarg.h>
 
@@ -79,6 +79,7 @@
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
@@ -221,6 +222,7 @@ struct CLogCategoryDesc
 const CLogCategoryDesc LogCategories[] =
 {
     {BCLog::NONE, "0"},
+    {BCLog::NONE, "none"},
     {BCLog::NET, "net"},
     {BCLog::TOR, "tor"},
     {BCLog::MEMPOOL, "mempool"},
@@ -364,6 +366,26 @@ int LogPrintStr(const std::string &str)
         }
     }
     return ret;
+}
+
+bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only)
+{
+    fs::path pathLockFile = directory / lockfile_name;
+    FILE* file = fsbridge::fopen(pathLockFile, "a"); // empty lock file; created if it doesn't exist.
+    if (file) fclose(file);
+    try {
+        static std::map<std::string, boost::interprocess::file_lock> locks;
+        boost::interprocess::file_lock& lock = locks.emplace(pathLockFile.string(), pathLockFile.string().c_str()).first->second;
+        if (!lock.try_lock()) {
+            return false;
+        }
+        if (probe_only) {
+            lock.unlock();
+        }
+    } catch (const boost::interprocess::interprocess_exception& e) {
+        return error("Error while attempting to lock directory %s: %s", directory.string(), e.what());
+    }
+    return true;
 }
 
 /** Interpret string as boolean, for argument parsing */
@@ -577,7 +599,10 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= BaseParams().DataDir();
 
-    fs::create_directories(path);
+    if (fs::create_directories(path)) {
+        // This is the first run, create wallets subdirectory too
+        fs::create_directories(path / "wallets");
+    }
 
     return path;
 }

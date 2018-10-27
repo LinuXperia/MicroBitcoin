@@ -6,12 +6,12 @@
 #ifndef BITCOIN_WALLET_DB_H
 #define BITCOIN_WALLET_DB_H
 
-#include "clientversion.h"
-#include "fs.h"
-#include "serialize.h"
-#include "streams.h"
-#include "sync.h"
-#include "version.h"
+#include <clientversion.h>
+#include <fs.h>
+#include <serialize.h>
+#include <streams.h>
+#include <sync.h>
+#include <version.h>
 
 #include <atomic>
 #include <map>
@@ -68,7 +68,7 @@ public:
     typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
     bool Salvage(const std::string& strFile, bool fAggressive, std::vector<KeyValPair>& vResult);
 
-    bool Open(const fs::path& path);
+    bool Open(const fs::path& path, bool retry = 0);
     void Close();
     void Flush(bool fShutdown);
     void CheckpointLSN(const std::string& strFile);
@@ -164,9 +164,9 @@ public:
        ideal to be called periodically */
     static bool PeriodicFlush(CWalletDBWrapper& dbw);
     /* verifies the database environment */
-    static bool VerifyEnvironment(const std::string& walletFile, const fs::path& dataDir, std::string& errorStr);
+    static bool VerifyEnvironment(const std::string& walletFile, const fs::path& walletDir, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
+    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& walletDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
 
 private:
     CDB(const CDB&);

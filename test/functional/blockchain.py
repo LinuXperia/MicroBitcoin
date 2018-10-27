@@ -5,6 +5,7 @@
 """Test RPCs related to blockchainstate.
 
 Test the following RPCs:
+    - getblockchaininfo
     - gettxoutsetinfo
     - getdifficulty
     - getbestblockhash
@@ -24,6 +25,8 @@ import subprocess
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises,
     assert_raises_rpc_error,
     assert_is_hex_string,
@@ -51,6 +54,28 @@ class BlockchainTest(BitcoinTestFramework):
         # tx rate should be 1 per 10 minutes, or 1/600
         # we have to round because of binary math
         assert_equal(round(chaintxstats['txrate'] * 600, 10), Decimal(1))
+
+        b1 = self.nodes[0].getblock(self.nodes[0].getblockhash(1))
+        b200 = self.nodes[0].getblock(self.nodes[0].getblockhash(200))
+        time_diff = b200['mediantime'] - b1['mediantime']
+        
+        chaintxstats = self.nodes[0].getchaintxstats()
+        assert_equal(chaintxstats['time'], b200['time'])
+        assert_equal(chaintxstats['txcount'], 201)
+        assert_equal(chaintxstats['window_block_count'], 199)
+        assert_equal(chaintxstats['window_tx_count'], 199)
+        assert_equal(chaintxstats['window_interval'], time_diff)
+        assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(199))
+        chaintxstats = self.nodes[0].getchaintxstats(blockhash=b1['hash'])
+
+        assert_equal(chaintxstats['time'], b1['time'])
+        assert_equal(chaintxstats['txcount'], 2)
+        assert_equal(chaintxstats['window_block_count'], 0)
+        assert('window_tx_count' not in chaintxstats)
+        assert('window_interval' not in chaintxstats)
+        assert('txrate' not in chaintxstats)
+
+        assert_raises_jsonrpc(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, 201)
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]

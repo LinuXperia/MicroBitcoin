@@ -7,18 +7,18 @@
 #ifndef BITCOIN_HASH_H
 #define BITCOIN_HASH_H
 
-#include "crypto/ripemd160.h"
-#include "crypto/sha256.h"
-#include "prevector.h"
-#include "serialize.h"
-#include "uint256.h"
-#include "version.h"
+#include <crypto/ripemd160.h>
+#include <crypto/sha256.h>
+#include <prevector.h>
+#include <serialize.h>
+#include <uint256.h>
+#include <version.h>
 #include <streams.h>
-#include "amount.h"
+#include <amount.h>
 
 #include <vector>
 
-#include "groestlcoin.h"
+#include <groestlcoin.h>
 typedef uint256 ChainCode;
 
 /** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */

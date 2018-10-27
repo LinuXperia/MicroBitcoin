@@ -5,17 +5,17 @@
 
 #include "core_io.h"
 
-#include "base58.h"
-#include "consensus/consensus.h"
-#include "consensus/validation.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "serialize.h"
-#include "streams.h"
+#include <base58.h>
+#include <consensus/consensus.h>
+#include <consensus/validation.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <serialize.h>
+#include <streams.h>
 #include <univalue.h>
-#include "util.h"
-#include "utilmoneystr.h"
-#include "utilstrencodings.h"
+#include <util.h>
+#include <utilmoneystr.h>
+#include <utilstrencodings.h>
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
@@ -69,14 +69,14 @@ const std::map<unsigned char, std::string> mapSigHashTypes = {
     {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_ANYONECANPAY), std::string("NONE|ANYONECANPAY")},
     {static_cast<unsigned char>(SIGHASH_SINGLE), std::string("SINGLE")},
     {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY), std::string("SINGLE|ANYONECANPAY")},
-    // Old reply protection
+    // Old replay protection
     {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_FORKID_OLD), std::string("ALL|FORKID_OLD")},
     {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_FORKID_OLD), std::string("NONE|FORKID_OLD")},
     {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_FORKID_OLD), std::string("SINGLE|FORKID_OLD")},
     {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY), std::string("ALL|FORKID_OLD|ANYONECANPAY")},
     {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY), std::string("NONE|FORKID_OLD|ANYONECANPAY")},
     {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_FORKID_OLD|SIGHASH_ANYONECANPAY), std::string("SINGLE|FORKID_OLD|ANYONECANPAY")},
-    // Reply protection
+    // Replay protection
     {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_FORKID), std::string("ALL|FORKID")},
     {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_FORKID), std::string("NONE|FORKID")},
     {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_FORKID), std::string("SINGLE|FORKID")},
@@ -164,8 +164,9 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("type", GetTxnOutputType(type));
 
     UniValue a(UniValue::VARR);
-    for (const CTxDestination& addr : addresses)
-        a.push_back(CBitcoinAddress(addr).ToString());
+    for (const CTxDestination& addr : addresses) {
+        a.push_back(EncodeDestination(addr));
+    }
     out.pushKV("addresses", a);
 }
 

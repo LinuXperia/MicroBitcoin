@@ -1,18 +1,18 @@
-#include "wallettests.h"
+#include <qt/test/wallettests.h>
 
-#include "qt/bitcoinamountfield.h"
-#include "qt/callback.h"
-#include "qt/optionsmodel.h"
-#include "qt/platformstyle.h"
-#include "qt/qvalidatedlineedit.h"
-#include "qt/sendcoinsdialog.h"
-#include "qt/sendcoinsentry.h"
-#include "qt/transactiontablemodel.h"
-#include "qt/transactionview.h"
-#include "qt/walletmodel.h"
-#include "test/test_bitcoin.h"
-#include "validation.h"
-#include "wallet/wallet.h"
+#include <qt/bitcoinamountfield.h>
+#include <qt/callback.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/qvalidatedlineedit.h>
+#include <qt/sendcoinsdialog.h>
+#include <qt/sendcoinsentry.h>
+#include <qt/transactiontablemodel.h>
+#include <qt/transactionview.h>
+#include <qt/walletmodel.h>
+#include <test/test_bitcoin.h>
+#include <validation.h>
+#include <wallet/wallet.h>
 
 #include <QAbstractButton>
 #include <QAction>
@@ -57,11 +57,11 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
 }
 
 //! Send coins to address and return txid.
-uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CBitcoinAddress& address, CAmount amount, bool rbf)
+uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDestination& address, CAmount amount, bool rbf)
 {
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
-    entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(address.ToString()));
+    entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(EncodeDestination(address)));
     entry->findChild<BitcoinAmountField*>("payAmount")->setValue(amount);
     sendCoinsDialog.findChild<QFrame*>("frameFee")
         ->findChild<QFrame*>("frameFeeSelection")
@@ -142,6 +142,9 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
 //     src/qt/test/test_bitcoin-qt -platform cocoa    # macOS
 void TestSendCoins()
 {
+    g_address_type = OUTPUT_TYPE_P2SH_SEGWIT;
+    g_change_type = OUTPUT_TYPE_P2SH_SEGWIT;
+
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
     for (int i = 0; i < 5; ++i) {
@@ -154,10 +157,15 @@ void TestSendCoins()
     wallet.LoadWallet(firstRun);
     {
         LOCK(wallet.cs_wallet);
-        wallet.SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
+        wallet.SetAddressBook(GetDestinationForKey(test.coinbaseKey.GetPubKey(), g_address_type), "", "receive");
         wallet.AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
     }
-    wallet.ScanForWalletTransactions(chainActive.Genesis(), true);
+    {
+        LOCK(cs_main);
+        WalletRescanReserver reserver(&wallet);
+        reserver.reserve();
+        wallet.ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
+    }
     wallet.SetBroadcastTransactions(true);
 
     // Create widgets for sending coins and listing transactions.
@@ -172,8 +180,8 @@ void TestSendCoins()
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
     QCOMPARE(transactionTableModel->rowCount({}), 105);
-    uint256 txid1 = SendCoins(wallet, sendCoinsDialog, CBitcoinAddress(CKeyID()), 5 * COIN, false /* rbf */);
-    uint256 txid2 = SendCoins(wallet, sendCoinsDialog, CBitcoinAddress(CKeyID()), 10 * COIN, true /* rbf */);
+    uint256 txid1 = SendCoins(wallet, sendCoinsDialog, CKeyID(), 5 * COIN, false /* rbf */);
+    uint256 txid2 = SendCoins(wallet, sendCoinsDialog, CKeyID(), 10 * COIN, true /* rbf */);
     QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());

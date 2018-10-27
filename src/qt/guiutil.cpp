@@ -2,21 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "guiutil.h"
+#include <qt/guiutil.h>
 
-#include "bitcoinaddressvalidator.h"
-#include "bitcoinunits.h"
-#include "qvalidatedlineedit.h"
-#include "walletmodel.h"
+#include <qt/bitcoinaddressvalidator.h>
+#include <qt/bitcoinunits.h>
+#include <qt/qvalidatedlineedit.h>
+#include <qt/walletmodel.h>
 
-#include "fs.h"
-#include "primitives/transaction.h"
-#include "init.h"
-#include "policy/policy.h"
-#include "protocol.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "util.h"
+#include <fs.h>
+#include <primitives/transaction.h>
+#include <init.h>
+#include <policy/policy.h>
+#include <protocol.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <util.h>
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT
@@ -31,9 +31,9 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include "shellapi.h"
-#include "shlobj.h"
-#include "shlwapi.h"
+#include <shellapi.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #endif
 
 #include <boost/scoped_array.hpp>
@@ -112,8 +112,9 @@ static std::string DummyAddress(const CChainParams &params)
     sourcedata.insert(sourcedata.end(), dummydata, dummydata + sizeof(dummydata));
     for(int i=0; i<256; ++i) { // Try every trailing byte
         std::string s = EncodeBase58(sourcedata.data(), sourcedata.data() + sourcedata.size());
-        if (!CBitcoinAddress(s).IsValid())
+        if (!IsValidDestinationString(s)) {
             return s;
+        }
         sourcedata[sourcedata.size()-1] += 1;
     }
     return "";
@@ -248,7 +249,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 
 bool isDust(const QString& address, const CAmount& amount)
 {
-    CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
+    CTxDestination dest = DecodeDestination(address.toStdString());
     CScript script = GetScriptForDestination(dest);
     CTxOut txOut(amount, script);
     return IsDust(txOut, ::dustRelayFee);

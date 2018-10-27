@@ -11,14 +11,14 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/bitcoin-config.h>
 #endif
 
-#include "compat.h"
-#include "fs.h"
-#include "sync.h"
-#include "tinyformat.h"
-#include "utiltime.h"
+#include <compat.h>
+#include <fs.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <utiltime.h>
 
 #include <atomic>
 #include <exception>
@@ -132,6 +132,10 @@ template<typename T, typename... Args> static inline void MarkUsed(const T& t, c
     MarkUsed(args...);
 }
 
+// Be conservative when using LogPrintf/error or other things which
+// unconditionally log to debug.log! It should not be the case that an inbound
+// peer can fill up a users disk with debug.log entries.
+
 #ifdef USE_COVERAGE
 #define LogPrintf(...) do { MarkUsed(__VA_ARGS__); } while(0)
 #define LogPrint(category, ...) do { MarkUsed(__VA_ARGS__); } while(0)
@@ -167,6 +171,7 @@ bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
 bool RenameOver(fs::path src, fs::path dest);
+bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);

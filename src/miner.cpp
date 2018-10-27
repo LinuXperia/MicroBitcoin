@@ -170,12 +170,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Add premine at hardfork height
     if (nHeight == chainparams.GetConsensus().mbcHeight)
     {
-        auto pmValue = chainparams.GetConsensus().premineValue;
-        CBitcoinAddress pmAddr(chainparams.GetConsensus().premineAddress);
-        coinbaseTx.vout[0].scriptPubKey = GetScriptForDestination(pmAddr.Get());
-        coinbaseTx.vout[0].nValue = pmValue;
+        coinbaseTx.vout[0].nValue = chainparams.GetConsensus().premineValue;
     } else {
-        coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
         coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     }
 
@@ -366,7 +362,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             // Try to compare the mapTx entry to the mapModifiedTx entry
             iter = mempool.mapTx.project<0>(mi);
             if (modit != mapModifiedTx.get<ancestor_score>().end() &&
-                    CompareModifiedEntry()(*modit, CTxMemPoolModifiedEntry(iter))) {
+                    CompareTxMemPoolEntryByAncestorFee()(*modit, CTxMemPoolModifiedEntry(iter))) {
                 // The best entry in mapModifiedTx has higher score
                 // than the one from mapTx.
                 // Switch which transaction (package) to consider

@@ -7,21 +7,21 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include "addrdb.h"
-#include "addrman.h"
-#include "amount.h"
-#include "bloom.h"
-#include "compat.h"
-#include "hash.h"
-#include "limitedmap.h"
-#include "netaddress.h"
-#include "policy/feerate.h"
-#include "protocol.h"
-#include "random.h"
-#include "streams.h"
-#include "sync.h"
-#include "uint256.h"
-#include "threadinterrupt.h"
+#include <addrdb.h>
+#include <addrman.h>
+#include <amount.h>
+#include <bloom.h>
+#include <compat.h>
+#include <hash.h>
+#include <limitedmap.h>
+#include <netaddress.h>
+#include <policy/feerate.h>
+#include <protocol.h>
+#include <random.h>
+#include <streams.h>
+#include <sync.h>
+#include <uint256.h>
+#include <threadinterrupt.h>
 
 #include <atomic>
 #include <deque>
@@ -85,8 +85,6 @@ static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
-static const ServiceFlags REQUIRED_SERVICES = NODE_NETWORK;
-
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
@@ -146,11 +144,13 @@ public:
         std::vector<std::string> vSeedNodes;
         std::vector<CSubNet> vWhitelistedRange;
         std::vector<CService> vBinds, vWhiteBinds;
+        bool m_use_addrman_outgoing = true;
+        std::vector<std::string> m_specified_outgoing;
+        std::vector<std::string> m_added_nodes;
     };
 
     void Init(const Options& connOptions) {
         nLocalServices = connOptions.nLocalServices;
-        nRelevantServices = connOptions.nRelevantServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
         nMaxAddnode = connOptions.nMaxAddnode;
@@ -160,9 +160,16 @@ public:
         m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
-        nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
-        nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
+        {
+            LOCK(cs_totalBytesSent);
+            nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
+            nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
+        }
         vWhitelistedRange = connOptions.vWhitelistedRange;
+        {
+            LOCK(cs_vAddedNodes);
+            vAddedNodes = connOptions.m_added_nodes;
+        }
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -323,7 +330,7 @@ private:
     void ThreadOpenAddedConnections();
     void AddOneShot(const std::string& strDest);
     void ProcessOneShot();
-    void ThreadOpenConnections();
+    void ThreadOpenConnections(std::vector<std::string> connect);
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
     void ThreadSocketHandler();
@@ -365,14 +372,14 @@ private:
     // Network usage totals
     CCriticalSection cs_totalBytesRecv;
     CCriticalSection cs_totalBytesSent;
-    uint64_t nTotalBytesRecv;
-    uint64_t nTotalBytesSent;
+    uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv);
+    uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent);
 
     // outbound limit & stats
-    uint64_t nMaxOutboundTotalBytesSentInCycle;
-    uint64_t nMaxOutboundCycleStartTime;
-    uint64_t nMaxOutboundLimit;
-    uint64_t nMaxOutboundTimeframe;
+    uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundCycleStartTime GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundTimeframe GUARDED_BY(cs_totalBytesSent);
 
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
@@ -390,7 +397,7 @@ private:
     CAddrMan addrman;
     std::deque<std::string> vOneShots;
     CCriticalSection cs_vOneShots;
-    std::vector<std::string> vAddedNodes;
+    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;

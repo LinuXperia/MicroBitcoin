@@ -6,9 +6,9 @@
 #ifndef BITCOIN_RPCSERVER_H
 #define BITCOIN_RPCSERVER_H
 
-#include "amount.h"
-#include "rpc/protocol.h"
-#include "uint256.h"
+#include <amount.h>
+#include <rpc/protocol.h>
+#include <uint256.h>
 
 #include <list>
 #include <map>
@@ -25,7 +25,6 @@ namespace RPCServer
 {
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
-    void OnPreCommand(std::function<void (const CRPCCommand&)> slot);
 }
 
 /** Wrapper for UniValue::VType, which includes typeAny:
@@ -134,7 +133,6 @@ public:
     std::string category;
     std::string name;
     rpcfn_type actor;
-    bool okSafeMode;
     std::vector<std::string> argNames;
 };
 
@@ -172,6 +170,8 @@ public:
      */
     bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
 };
+
+bool IsDeprecatedRPCEnabled(const std::string& method);
 
 extern CRPCTable tableRPC;
 

@@ -3,16 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "policy/fees.h"
-#include "policy/policy.h"
+#include <policy/fees.h>
+#include <policy/policy.h>
 
-#include "amount.h"
-#include "clientversion.h"
-#include "primitives/transaction.h"
-#include "random.h"
-#include "streams.h"
-#include "txmempool.h"
-#include "util.h"
+#include <amount.h>
+#include <clientversion.h>
+#include <primitives/transaction.h>
+#include <random.h>
+#include <streams.h>
+#include <txmempool.h>
+#include <util.h>
 
 static constexpr double INF_FEERATE = 1e99;
 
@@ -714,7 +714,7 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     if (median < 0)
         return CFeeRate(0);
 
-    return CFeeRate(median);
+    return CFeeRate(llround(median));
 }
 
 unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon horizon) const
@@ -901,7 +901,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 
     if (median < 0) return CFeeRate(0); // error condition
 
-    return CFeeRate(median);
+    return CFeeRate(llround(median));
 }
 
 
@@ -1043,5 +1043,5 @@ CAmount FeeFilterRounder::round(CAmount currentMinFee)
     if ((it != feeset.begin() && insecure_rand.rand32() % 3 != 0) || it == feeset.end()) {
         it--;
     }
-    return *it;
+    return static_cast<CAmount>(*it);
 }

@@ -4,14 +4,14 @@
 
 #include "httpserver.h"
 
-#include "chainparamsbase.h"
-#include "compat.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "netbase.h"
-#include "rpc/protocol.h" // For HTTP status codes
-#include "sync.h"
-#include "ui_interface.h"
+#include <chainparamsbase.h>
+#include <compat.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <netbase.h>
+#include <rpc/protocol.h> // For HTTP status codes
+#include <sync.h>
+#include <ui_interface.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +41,7 @@
 static const size_t MAX_HEADERS_SIZE = 8192;
 
 /** HTTP request work item */
-class HTTPWorkItem : public HTTPClosure
+class HTTPWorkItem final : public HTTPClosure
 {
 public:
     HTTPWorkItem(std::unique_ptr<HTTPRequest> _req, const std::string &_path, const HTTPRequestHandler& _func):
@@ -99,8 +99,7 @@ public:
                                  numThreads(0)
     {
     }
-    /** Precondition: worker threads have all stopped
-     * (call WaitExit)
+    /** Precondition: worker threads have all stopped (they have been joined).
      */
     ~WorkQueue()
     {
@@ -140,13 +139,6 @@ public:
         std::unique_lock<std::mutex> lock(cs);
         running = false;
         cond.notify_all();
-    }
-    /** Wait for worker threads to exit */
-    void WaitExit()
-    {
-        std::unique_lock<std::mutex> lock(cs);
-        while (numThreads > 0)
-            cond.wait(lock);
     }
 };
 
@@ -486,12 +478,13 @@ void StopHTTPServer()
     LogPrint(BCLog::HTTP, "Stopping HTTP server\n");
     if (workQueue) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP worker threads to exit\n");
-        workQueue->WaitExit();
         delete workQueue;
         workQueue = nullptr;
     }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
+        // Exit the event loop as soon as there are no active events.
+        event_base_loopexit(eventBase, nullptr);
         // Give event loop a few seconds to exit (to send back last RPC responses), then break it
         // Before this was solved with event_base_loopexit, but that didn't work as expected in
         // at least libevent 2.0.21 and always introduced a delay. In libevent
