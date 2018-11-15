@@ -86,7 +86,6 @@ BITCOIN_CORE_H = \
   chain.h \
   chainparams.h \
   bignum.h \
-  groestlcoin.h \
   sphlib/sph_types.h \
   sphlib/sph_groestl.h \
   chainparamsbase.h \
@@ -300,7 +299,6 @@ libbitcoin_consensus_a_SOURCES = \
   hash.cpp \
   hash.h \
   sphlib/groestl.cpp \
-  groestlcoin-hash.cpp \
   prevector.h \
   primitives/block.h \
   primitives/transaction.cpp \

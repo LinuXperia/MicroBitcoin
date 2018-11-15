@@ -19,12 +19,11 @@
  */
 uint256 CBlockHeader::GetHash(const Consensus::Params& consensusParams) const
 {
-    // if (IsMicroBitcoin())
-    if (nTime > consensusParams.mbcTimestamp)
-    {
-        XCoin::CGroestlHashWriter ss(SER_GETHASH, PROTOCOL_VERSION); // GRS
-        ss << *this;
-        return ss.GetHash();
+    if (nTime > consensusParams.mbcTimestamp) {
+        // XCoin::CGroestlHashWriter ss(SER_GETHASH, PROTOCOL_VERSION); // GRS
+        // ss << *this;
+        // return ss.GetHash();
+        return groestl(BEGIN(nVersion), END(nNonce));
     } else {
         return SerializeHash(*this);
     }

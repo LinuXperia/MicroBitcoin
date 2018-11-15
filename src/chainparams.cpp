@@ -242,7 +242,7 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        consensus.mbcHeight = 2;
+        consensus.mbcHeight = 1;
         consensus.mbcTimestamp = 1537036775;
         consensus.premineValue = 10000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vmd7hEpGhuKAzDYpq9qtbrf28pKKfULsbP";
@@ -252,13 +252,13 @@ public:
         consensus.lwmaAveragingWindow = 90;
 
         pchBitcoinMessageStart[0] = 0x03;
-        pchBitcoinMessageStart[1] = 0x10;
+        pchBitcoinMessageStart[1] = 0x11;
         pchBitcoinMessageStart[2] = 0x08;
         pchBitcoinMessageStart[3] = 0x06;
 
         pchMessageStart[0] = 0xf2;
         pchMessageStart[1] = 0xb1;
-        pchMessageStart[2] = 0xb4;
+        pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xd6;
 
         nDefaultPort = 18433;

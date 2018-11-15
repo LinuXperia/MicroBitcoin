@@ -18,7 +18,10 @@
 
 #include <vector>
 
-#include <groestlcoin.h>
+extern "C" {
+#include <sphlib/sph_groestl.h>
+} // "C"
+
 typedef uint256 ChainCode;
 
 /** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
@@ -247,5 +250,25 @@ public:
 uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
 uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
 
+/** Groestl hash implementation */
+template <typename T1>
+inline uint256 groestl(const T1 pbegin, const T1 pend)
+{
+    static unsigned char pblank[1];
+
+    sph_groestl512_context ctx_groestl;
+
+    uint256 hash[2];
+
+    sph_groestl512_init(&ctx_groestl);
+    sph_groestl512(&ctx_groestl, (pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
+    sph_groestl512_close(&ctx_groestl, static_cast<void*>(&hash[0]));
+
+    sph_groestl512_init(&ctx_groestl);
+    sph_groestl512 (&ctx_groestl, static_cast<const void*>(&hash[0]), 64);
+    sph_groestl512_close(&ctx_groestl, static_cast<void*>(&hash[2]));
+
+    return hash[2];
+}
 
 #endif // BITCOIN_HASH_H
