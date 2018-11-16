@@ -252,7 +252,7 @@ uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint3
 
 /** Groestl hash implementation */
 template <typename T1>
-inline uint256 groestl(const T1 pbegin, const T1 pend)
+inline uint256 Groestl(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
 
