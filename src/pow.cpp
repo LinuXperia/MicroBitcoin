@@ -185,7 +185,7 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     nextTarget = t * sumTarget;
     
     if (nextTarget > (previousDiff * 150) / 100) { nextTarget = (previousDiff * 150) / 100; }
-    if ((previousDiff * 67) / 100 > nextTarget) { nextTarget = (previousDiff * 67); }
+    if (nextTarget < (previousDiff * 67) / 100) { nextTarget = (previousDiff * 67) / 100; }
     if (solvetimeSum < (8 * T) / 10) { nextTarget = previousDiff * 100 / 106; }
     if (nextTarget > powLimit) { nextTarget = powLimit; }
 
