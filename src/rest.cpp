@@ -594,6 +594,53 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     return true; // continue to process further HTTP reqs on this cxn
 }
 
+static bool rest_blockhash(HTTPRequest* req, const std::string& str_uri_part)
+{
+    if (!CheckWarmup(req)) {
+        return false;
+    }
+
+    std::string height_str;
+    const RetFormat rf = ParseDataFormat(height_str, str_uri_part);
+
+    int blockheight;
+    if (!ParseInt32(height_str, &blockheight) || blockheight < 0) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str));
+    }
+
+    CBlockIndex* pblockindex = nullptr;
+    {
+        LOCK(cs_main);
+        if (blockheight > chainActive.Height()) {
+            return RESTERR(req, HTTP_NOT_FOUND, "Block height out of range");
+        }
+        pblockindex = chainActive[blockheight];
+    }
+
+    switch (rf) {
+        case RF_BINARY: {
+            CDataStream ss_blockhash(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+            ss_blockhash << pblockindex->GetBlockHash();
+            req->WriteHeader("Content-Type", "application/octet-stream");
+            req->WriteReply(HTTP_OK, ss_blockhash.str());
+            return true;
+        }
+        case RF_HEX: {
+            req->WriteHeader("Content-Type", "text/plain");
+            req->WriteReply(HTTP_OK, pblockindex->GetBlockHash().GetHex() + "\n");
+            return true;
+        }
+        case RF_JSON: {
+            req->WriteHeader("Content-Type", "application/json");
+            req->WriteReply(HTTP_OK, UniValue(pblockindex->GetBlockHash().GetHex()).write() + "\n");
+            return true;
+        }
+        default: {
+            return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+        }
+    }
+}
+
 static const struct {
     const char* prefix;
     bool (*handler)(HTTPRequest* req, const std::string& strReq);
@@ -606,6 +653,7 @@ static const struct {
       {"/rest/mempool/contents", rest_mempool_contents},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
+      {"/rest/blockhash/", rest_blockhash},
 };
 
 bool StartREST()
