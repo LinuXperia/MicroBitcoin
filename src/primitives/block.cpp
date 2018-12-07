@@ -20,7 +20,6 @@
  */
 uint256 CBlockHeader::GetWorkHash(const Consensus::Params& consensusParams, int nHeight) const
 {
-    // if (nTime > consensusParams.mbcTimestamp) {
     if (nHeight >= consensusParams.mbcHeight) {
         return Groestl(BEGIN(nVersion), END(nNonce));
     } else {
