@@ -252,7 +252,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     } else if (isLwma3) {
         return Lwma3CalculateNextWorkRequired(pindexLast, params);
     } else {
-        return pblock->IsMicroBitcoin()
+        return pindexLast->nHeight >= params.mbcHeight
             ? DarkGravityWave3(pindexLast, params)
             : BitcoinNextWorkRequired(pindexLast, pblock, params);
     }
@@ -283,7 +283,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, bool ifForked, const Consensus::Params& params)
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nHeight, const Consensus::Params& params)
 {
     bool fNegative;
     bool fOverflow;
@@ -292,7 +292,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, bool ifForked, const Con
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(ifForked ? params.powLimitStart : params.powLimit)) {
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(nHeight >= params.mbcHeight ? params.powLimitStart : params.powLimit)) {
         return false;
     }
     

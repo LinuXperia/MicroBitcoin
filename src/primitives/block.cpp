@@ -13,35 +13,36 @@
 #include <versionbits.h>
 #include <consensus/params.h>
 #include <chainparams.h>
+#include <microbitcoin.h>
 
 /*
  * All magic is happening here :D
  */
-uint256 CBlockHeader::GetHash(const Consensus::Params& consensusParams) const
+uint256 CBlockHeader::GetWorkHash(const Consensus::Params& consensusParams, int nHeight) const
 {
-    if (nTime > consensusParams.mbcTimestamp) {
+    // if (nTime > consensusParams.mbcTimestamp) {
+    if (nHeight >= consensusParams.mbcHeight) {
         return Groestl(BEGIN(nVersion), END(nNonce));
     } else {
         return SerializeHash(*this);
     }
 }
 
-uint256 CBlockHeader::GetHash() const
+uint256 CBlockHeader::GetWorkHash(int nHeight, int nIndex) const
 {
+    if (nIndex > 0) {
+        std::cout << "\n\nHeight: " << nHeight << ", index: " << nIndex << "\n\n";
+    }
+
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    return GetHash(consensusParams);
+    return GetWorkHash(consensusParams, nHeight);
 }
 
-bool CBlockHeader::IsMicroBitcoin() const
-{
-    return nTime > Params().GetConsensus().mbcTimestamp;
-}
-
-std::string CBlock::ToString() const
+std::string CBlock::ToString(int nHeight) const
 {
     std::stringstream s;
     s << strprintf("CBlock(hash=%s, ver=0x%08x, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
-        GetHash().ToString(),
+        GetWorkHash(nHeight).ToString(),
         nVersion,
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),

@@ -288,10 +288,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                // bool isFork = pindexNew->nTime >= 1527625482;
-                bool isFork = pindexNew->nTime > consensusParams.mbcTimestamp;
-
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, isFork, consensusParams)) {
+                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, pindexNew->nHeight, consensusParams)) {
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
                 }
 
