@@ -86,8 +86,6 @@ BITCOIN_CORE_H = \
   chain.h \
   chainparams.h \
   bignum.h \
-  sphlib/sph_types.h \
-  sphlib/sph_groestl.h \
   chainparamsbase.h \
   chainparamsseeds.h \
   checkpoints.h \
@@ -280,7 +278,14 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha256.cpp \
   crypto/sha256.h \
   crypto/sha512.cpp \
-  crypto/sha512.h
+  crypto/sha512.h \
+  crypto/sphlib/sph_types.h \
+  crypto/sphlib/sph_groestl.cpp \
+  crypto/sphlib/sph_groestl.h \
+  crypto/kupyna/kupyna_tables.c \
+  crypto/kupyna/kupyna_tables.h \
+  crypto/kupyna/kupyna512.c \
+  crypto/kupyna/kupyna512.h
 
 if EXPERIMENTAL_ASM
 crypto_libbitcoin_crypto_a_SOURCES += crypto/sha256_sse4.cpp
@@ -299,7 +304,6 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
-  sphlib/groestl.cpp \
   prevector.h \
   primitives/block.h \
   primitives/transaction.cpp \

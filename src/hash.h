@@ -19,7 +19,7 @@
 #include <vector>
 
 extern "C" {
-#include <sphlib/sph_groestl.h>
+#include <crypto/sphlib/sph_groestl.h>
 } // "C"
 
 typedef uint256 ChainCode;
