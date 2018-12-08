@@ -168,8 +168,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // Add premine at hardfork height
-    if (nHeight == chainparams.GetConsensus().mbcHeight)
-    {
+    if (nHeight == (chainparams.GetConsensus().mbcHeight + 1)) {
         coinbaseTx.vout[0].nValue = chainparams.GetConsensus().premineValue;
     } else {
         coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
@@ -189,7 +188,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     CValidationState state;
-    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false) && nHeight != chainparams.GetConsensus().mbcHeight) {
+    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false) && nHeight != (chainparams.GetConsensus().mbcHeight + 1)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
     int64_t nTime2 = GetTimeMicros();

@@ -1129,7 +1129,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     const CAmount initSubsidy = 50 * COIN * COIN_RATIO;
 
     // Old subsidy
-    if (nHeight < consensusParams.mbcHeight)
+    if (nHeight < (consensusParams.mbcHeight + 1))
     {
         const int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
         // Force block reward to zero when right shift is undefined.
@@ -1146,10 +1146,10 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 
     // New subsidy
     const int halvingRatio = (consensusParams.nSubsidyHalvingInterval * 10) / consensusParams.nSubsidyHalvingInterval;
-    const CAmount initSubsidyMBC = initSubsidy >> (consensusParams.mbcHeight / consensusParams.nSubsidyHalvingInterval);
-    const int lastSubsidyHeightBTC = (consensusParams.mbcHeight / consensusParams.nSubsidyHalvingInterval) * consensusParams.nSubsidyHalvingInterval;
-    const int remainSubsidyHeightBTC = consensusParams.nSubsidyHalvingInterval - (consensusParams.mbcHeight - lastSubsidyHeightBTC);
-    const int newSubsidyHeightMBC = consensusParams.mbcHeight + remainSubsidyHeightBTC * halvingRatio;
+    const CAmount initSubsidyMBC = initSubsidy >> ((consensusParams.mbcHeight + 1) / consensusParams.nSubsidyHalvingInterval);
+    const int lastSubsidyHeightBTC = ((consensusParams.mbcHeight + 1) / consensusParams.nSubsidyHalvingInterval) * consensusParams.nSubsidyHalvingInterval;
+    const int remainSubsidyHeightBTC = consensusParams.nSubsidyHalvingInterval - ((consensusParams.mbcHeight + 1) - lastSubsidyHeightBTC);
+    const int newSubsidyHeightMBC = (consensusParams.mbcHeight + 1) + remainSubsidyHeightBTC * halvingRatio;
     if (nHeight < newSubsidyHeightMBC) {
         const CAmount nSubsidy = initSubsidyMBC / halvingRatio;
         return nSubsidy;
@@ -1740,7 +1740,7 @@ public:
 // Protected by cs_main
 static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS];
 
-static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) {
+static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams) {
     AssertLockHeld(cs_main);
 
     // BIP16 didn't become active until Apr 1 2012
@@ -1750,34 +1750,34 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Start enforcing the DERSIG (BIP66) rule
-    if (pindex->nHeight >= consensusparams.BIP66Height) {
+    if (pindex->nHeight >= consensusParams.BIP66Height) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
     // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    if (pindex->nHeight >= consensusparams.BIP65Height) {
+    if (pindex->nHeight >= consensusParams.BIP65Height) {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
     // Start enforcing WITNESS rules using versionbits logic.
-    if (IsWitnessEnabled(pindex->pprev, consensusparams)) {
+    if (IsWitnessEnabled(pindex->pprev, consensusParams)) {
         flags |= SCRIPT_VERIFY_WITNESS;
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
     // After hardfork we start accepting replay protected txns (OLD)
-    if (pindex->nHeight >= consensusparams.mbcHeight && pindex->nHeight < consensusparams.lwma2Height) {
+    if (pindex->nHeight > (consensusParams.mbcHeight + 1) && pindex->nHeight < consensusParams.lwma2Height) {
         flags |= SCRIPT_VERIFY_STRICTENC;
         flags |= SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
     }
 
     // New replay protection
-    if (pindex->nHeight >= consensusparams.lwma2Height) {
+    if (pindex->nHeight >= consensusParams.lwma2Height) {
         flags |= SCRIPT_VERIFY_STRICTENC;
         flags |= SCRIPT_ENABLE_SIGHASH_FORKID;
     }

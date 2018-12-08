@@ -110,7 +110,7 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000000000000005214481d2d96f898e3d5416e43359c145944a909d242e0"); //506067
 
-        consensus.mbcHeight = 525001;
+        consensus.mbcHeight = 525000;
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 

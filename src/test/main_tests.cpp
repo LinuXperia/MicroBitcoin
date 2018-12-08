@@ -35,7 +35,7 @@ static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
         const int nHeight = halvingsHeight(nHalvings, consensusParams);
 
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        if (consensusParams.mbcHeight <= nHeight) {
+        if ((consensusParams.mbcHeight + 1) <= nHeight) {
             nSubsidy = nSubsidy * ((consensusParams.nSubsidyHalvingInterval * 10) / consensusParams.nSubsidyHalvingInterval);
             BOOST_CHECK((nSubsidy == nPreviousSubsidy / 2) || ((nSubsidy + 5) == nPreviousSubsidy / 2));
         } else {

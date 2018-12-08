@@ -210,12 +210,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     int nHeight = pindexLast->nHeight + 1;
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
-    const auto isHardfork = nHeight >= params.mbcHeight;
+    const auto isHardfork = nHeight > params.mbcHeight;
     const auto isLwma2 = nHeight >= params.lwma2Height && nHeight < params.lwma3Height;
     const auto isLwma3 = nHeight >= params.lwma3Height;
 
     // Pow limit start for warm-up period
-    if (isHardfork && nHeight < params.mbcHeight + params.nWarmUpWindow) {
+    if (isHardfork && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow) {
         return UintToArith256(params.powLimitStart).GetCompact();
     }
 
@@ -252,7 +252,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     } else if (isLwma3) {
         return Lwma3CalculateNextWorkRequired(pindexLast, params);
     } else {
-        return pindexLast->nHeight >= params.mbcHeight
+        return pindexLast->nHeight > params.mbcHeight
             ? DarkGravityWave3(pindexLast, params)
             : BitcoinNextWorkRequired(pindexLast, pblock, params);
     }
@@ -292,7 +292,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nHeight, const Conse
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(nHeight >= params.mbcHeight ? params.powLimitStart : params.powLimit)) {
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(nHeight > params.mbcHeight ? params.powLimitStart : params.powLimit)) {
         return false;
     }
     
