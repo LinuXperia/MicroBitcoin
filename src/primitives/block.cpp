@@ -20,7 +20,9 @@
  */
 uint256 CBlockHeader::GetWorkHash(const Consensus::Params& consensusParams, int nHeight) const
 {
-    if (nHeight > consensusParams.mbcHeight) {
+    if (nHeight >= consensusParams.mirinaeHeight) {
+        return Mirinae(BEGIN(nVersion), END(nNonce), nHeight, hashPrevBlock);
+    } else if (nHeight > consensusParams.mbcHeight && nHeight < consensusParams.mirinaeHeight) {
         return Groestl(BEGIN(nVersion), END(nNonce));
     } else {
         return SerializeHash(*this);

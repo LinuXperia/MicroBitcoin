@@ -118,6 +118,8 @@ public:
         consensus.lwma3Height = 654000;
         consensus.lwmaAveragingWindow = 90;
 
+        consensus.mirinaeHeight = 999999999;
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -249,6 +251,8 @@ public:
         consensus.lwma3Height = 2;
         consensus.lwmaAveragingWindow = 90;
 
+        consensus.mirinaeHeight = 999999999;
+
         pchBitcoinMessageStart[0] = 0x03;
         pchBitcoinMessageStart[1] = 0x11;
         pchBitcoinMessageStart[2] = 0x08;
@@ -346,6 +350,8 @@ public:
         consensus.lwma2Height = 200;
         consensus.lwma3Height = 999999999;
         consensus.lwmaAveragingWindow = 90;
+
+        consensus.mirinaeHeight = 999999999;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;

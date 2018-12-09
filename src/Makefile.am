@@ -5,9 +5,9 @@
 
 DIST_SUBDIRS = secp256k1 univalue
 
-AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
-AM_CXXFLAGS = $(HARDENED_CXXFLAGS) $(ERROR_CXXFLAGS)
-AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
+AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS)
+AM_CXXFLAGS = $(ERROR_CXXFLAGS)
+AM_CPPFLAGS =
 EXTRA_LIBRARIES =
 
 if EMBEDDED_UNIVALUE
@@ -282,10 +282,12 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sphlib/sph_types.h \
   crypto/sphlib/sph_groestl.cpp \
   crypto/sphlib/sph_groestl.h \
+  crypto/kupyna/kupyna512.c \
+  crypto/kupyna/kupyna512.h \
   crypto/kupyna/kupyna_tables.c \
   crypto/kupyna/kupyna_tables.h \
-  crypto/kupyna/kupyna512.c \
-  crypto/kupyna/kupyna512.h
+  crypto/mirinae.c \
+  crypto/mirinae.h
 
 if EXPERIMENTAL_ASM
 crypto_libbitcoin_crypto_a_SOURCES += crypto/sha256_sse4.cpp
