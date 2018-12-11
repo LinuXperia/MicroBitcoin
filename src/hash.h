@@ -267,9 +267,9 @@ inline uint256 Groestl(const T1 pbegin, const T1 pend)
 
     sph_groestl512_init(&ctx_groestl);
     sph_groestl512 (&ctx_groestl, static_cast<const void*>(&hash[0]), 64);
-    sph_groestl512_close(&ctx_groestl, static_cast<void*>(&hash[2]));
+    sph_groestl512_close(&ctx_groestl, static_cast<void*>(&hash[1]));
 
-    return hash[2];
+    return hash[1];
 }
 
 /** Mirinae hash wrapper */
