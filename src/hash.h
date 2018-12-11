@@ -288,5 +288,4 @@ inline uint256 Mirinae(const T* pbegin, const T* pend, int height, uint256 prev_
     return hash;
 }
 
-
 #endif // BITCOIN_HASH_H

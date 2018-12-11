@@ -119,6 +119,7 @@ public:
         consensus.lwmaAveragingWindow = 90;
 
         consensus.mirinaeHeight = 999999999;
+        consensus.mirinaeWarmUpWindow = 0;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -252,6 +253,7 @@ public:
         consensus.lwmaAveragingWindow = 90;
 
         consensus.mirinaeHeight = 20;
+        consensus.mirinaeWarmUpWindow = 100;
 
         pchBitcoinMessageStart[0] = 0x03;
         pchBitcoinMessageStart[1] = 0x11;
@@ -351,6 +353,7 @@ public:
         consensus.lwmaAveragingWindow = 90;
 
         consensus.mirinaeHeight = 999999999;
+        consensus.mirinaeWarmUpWindow = 100;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;

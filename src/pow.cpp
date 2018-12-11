@@ -216,8 +216,16 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     const auto isLwma2 = nHeight >= params.lwma2Height && nHeight < params.lwma3Height;
     const auto isLwma3 = nHeight >= params.lwma3Height;
 
-    // Pow limit start for warm-up period
-    if (isHardfork && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow) {
+    const auto mbcWarmUp = (isHardfork && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow);
+    const auto mirinaeWarmUp = (nHeight > params.mirinaeHeight && nHeight < params.mirinaeHeight + params.mirinaeWarmUpWindow);
+
+    // Pow warm-up window
+    if (mbcWarmUp || mirinaeWarmUp) {
+        return UintToArith256(params.powLimitStart).GetCompact();
+    }
+
+    // Mirinae warm-up window
+    if ( && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow) {
         return UintToArith256(params.powLimitStart).GetCompact();
     }
 
