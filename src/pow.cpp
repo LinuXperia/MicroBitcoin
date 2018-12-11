@@ -101,7 +101,9 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t N = params.lwmaAveragingWindow;
     const int64_t k = N * (N + 1) * T / 2;
     const int height = pindexLast->nHeight;
-    assert(height > N);
+    const arith_uint256 powLimit = UintToArith256(params.powLimitStart);
+
+    if (height < N) { return powLimit.GetCompact(); }
 
     arith_uint256 sum_target, previous_diff, next_target;
     int64_t t = 0, j = 0, solvetime_sum;
