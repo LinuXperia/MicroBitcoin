@@ -214,7 +214,7 @@ public:
         consensus.BIP66Height = 2; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
         consensus.powLimit = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nWarmUpWindow = 1;
+        consensus.nWarmUpWindow = 10000;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.nBtcPowTargetSpacing = 1 * 60;
@@ -243,15 +243,15 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        consensus.mbcHeight = 1;
-        consensus.premineValue = 10000000 * COIN * COIN_RATIO;
+        consensus.mbcHeight = 5;
+        consensus.premineValue = 100000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vmd7hEpGhuKAzDYpq9qtbrf28pKKfULsbP";
 
-        consensus.lwma2Height = 999999999;
-        consensus.lwma3Height = 2;
+        consensus.lwma2Height = 10;
+        consensus.lwma3Height = 15;
         consensus.lwmaAveragingWindow = 90;
 
-        consensus.mirinaeHeight = 999999999;
+        consensus.mirinaeHeight = 20;
 
         pchBitcoinMessageStart[0] = 0x03;
         pchBitcoinMessageStart[1] = 0x11;
@@ -287,7 +287,6 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
-
 
         checkpointData = {
             {
