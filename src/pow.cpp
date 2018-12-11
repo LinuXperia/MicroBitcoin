@@ -223,12 +223,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (mbcWarmUp || mirinaeWarmUp) {
         return UintToArith256(params.powLimitStart).GetCompact();
     }
-
-    // Mirinae warm-up window
-    if ( && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow) {
-        return UintToArith256(params.powLimitStart).GetCompact();
-    }
-
+    
     if (params.fPowNoRetargeting) return pindexLast->nBits;
 
     const auto difficultyAdjustmentInterval = isHardfork
