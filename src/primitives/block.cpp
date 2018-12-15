@@ -31,10 +31,7 @@ uint256 CBlockHeader::GetWorkHash(const Consensus::Params& consensusParams, int 
 
 uint256 CBlockHeader::GetWorkHash(int nHeight, int nIndex) const
 {
-    if (nIndex > 0) {
-        std::cout << "\n\nHeight: " << nHeight << ", index: " << nIndex << "\n\n";
-    }
-
+    if (nIndex > 0) { std::cout << "\n\nHeight: " << nHeight << ", nIndex: " << nIndex << "\n"; }
     const Consensus::Params& consensusParams = Params().GetConsensus();
     return GetWorkHash(consensusParams, nHeight);
 }

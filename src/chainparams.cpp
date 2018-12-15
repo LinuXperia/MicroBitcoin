@@ -214,7 +214,7 @@ public:
         consensus.BIP65Height = 2; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 2; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
         consensus.powLimit = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimitStart = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nWarmUpWindow = 10000;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
@@ -255,15 +255,15 @@ public:
         consensus.mirinaeHeight = 20;
         consensus.mirinaeWarmUpWindow = 100;
 
-        pchBitcoinMessageStart[0] = 0x03;
-        pchBitcoinMessageStart[1] = 0x11;
-        pchBitcoinMessageStart[2] = 0x08;
-        pchBitcoinMessageStart[3] = 0x06;
+        pchBitcoinMessageStart[0] = 0x02;
+        pchBitcoinMessageStart[1] = 0x22;
+        pchBitcoinMessageStart[2] = 0x03;
+        pchBitcoinMessageStart[3] = 0x05;
 
-        pchMessageStart[0] = 0xf2;
+        pchMessageStart[0] = 0xd2;
         pchMessageStart[1] = 0xb1;
         pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xd6;
+        pchMessageStart[3] = 0xd8;
 
         nDefaultPort = 18433;
         nPruneAfterHeight = 1000;

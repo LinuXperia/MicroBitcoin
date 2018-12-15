@@ -296,6 +296,11 @@ public:
         return *phashBlock;
     }
 
+    uint256 GetBlockWorkHash(int nBlockHeight) const
+    {
+        return GetBlockHeader().GetWorkHash(nBlockHeight);
+    }
+
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
@@ -419,7 +424,7 @@ public:
         block.nBits           = nBits;
         block.nNonce          = nNonce;
 
-        return block.GetWorkHash(nHeight, 0);
+        return block.GetWorkHash(nHeight);
     }
 
 

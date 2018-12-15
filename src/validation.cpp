@@ -154,7 +154,7 @@ public:
     BlockMap mapBlockIndex;
     std::multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
     CBlockIndex *pindexBestInvalid = nullptr;
-    bool LoadBlockIndex(const Consensus::Params& consensus_params, CBlockTreeDB& blocktree);
+    bool LoadBlockIndex(const Consensus::Params& consensusParams, CBlockTreeDB& blocktree);
     bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock);
     bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex);
     bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock);
@@ -1098,7 +1098,8 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetWorkHash(GetBlockHeight(block)), block.nBits, GetBlockHeight(block), consensusParams)) {
+    int nHeight = GetBlockHeight(block);
+    if (!CheckProofOfWork(block.GetWorkHash(nHeight), block.nBits, nHeight, consensusParams)) {
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
     }
 
@@ -1116,8 +1117,8 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
         return false;
     }
 
-    if (block.GetWorkHash(GetBlockHeight(block)) != pindex->GetBlockHash()) {
-        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
+    if (block.GetWorkHash(pindex->nHeight) != pindex->GetBlockHash()) {
+        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetWorkHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
     }
     
@@ -1806,7 +1807,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     // pindex->phashBlock can be null if called by CreateNewBlock/TestBlockValidity
 
     assert((pindex->phashBlock == nullptr) ||
-           (*pindex->phashBlock == block.GetWorkHash(GetBlockHeight(block))));
+           (*pindex->phashBlock == block.GetWorkHash(pindex->nHeight)));
     int64_t nTimeStart = GetTimeMicros();
 
     // Check it again in case a previous version let a bad block in
@@ -3014,7 +3015,8 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetWorkHash(GetBlockHeight(block)), block.nBits, GetBlockHeight(block), consensusParams)) {
+    int nHeight = GetBlockHeight(block);
+    if (fCheckPOW && !CheckProofOfWork(block.GetWorkHash(nHeight), block.nBits, nHeight, consensusParams)) {
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
     }
 
@@ -3285,8 +3287,9 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
-    // Check for duplicate
-    uint256 hash = block.GetWorkHash(GetBlockHeight(block));
+    int nHeight = GetBlockHeight(block);
+    uint256 hash = block.GetWorkHash(nHeight);
+
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
     CBlockIndex *pindex = nullptr;
     if (hash != chainparams.GetConsensus().hashGenesisBlock) {
@@ -3486,7 +3489,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
-            return error("%s: AcceptBlock FAILED (%s)", __func__, state.GetDebugMessage());
+            return error("%s: AcceptBlock FAILED (%s), Bad hash: %s", __func__, state.GetDebugMessage(), pblock->GetWorkHash(GetBlockHeight(pblock->hashPrevBlock)).ToString());
         }
     }
     NotifyHeaderTip();
@@ -3743,9 +3746,9 @@ CBlockIndex * CChainState::InsertBlockIndex(const uint256& hash)
     return pindexNew;
 }
 
-bool CChainState::LoadBlockIndex(const Consensus::Params& consensus_params, CBlockTreeDB& blocktree)
+bool CChainState::LoadBlockIndex(const Consensus::Params& consensusParams, CBlockTreeDB& blocktree)
 {
-    if (!blocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash){ return this->InsertBlockIndex(hash); })) {
+    if (!blocktree.LoadBlockIndexGuts(consensusParams, [this](const uint256& hash){ return this->InsertBlockIndex(hash); })) {
         return false;
     }
 
