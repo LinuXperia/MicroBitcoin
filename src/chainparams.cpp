@@ -255,10 +255,10 @@ public:
         consensus.mirinaeHeight = 20;
         consensus.mirinaeWarmUpWindow = 100;
 
-        pchBitcoinMessageStart[0] = 0x02;
+        pchBitcoinMessageStart[0] = 0x03;
         pchBitcoinMessageStart[1] = 0x22;
-        pchBitcoinMessageStart[2] = 0x03;
-        pchBitcoinMessageStart[3] = 0x05;
+        pchBitcoinMessageStart[2] = 0x13;
+        pchBitcoinMessageStart[3] = 0x95;
 
         pchMessageStart[0] = 0xd2;
         pchMessageStart[1] = 0xb1;
