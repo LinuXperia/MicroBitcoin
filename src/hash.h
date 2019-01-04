@@ -274,7 +274,7 @@ inline uint256 Groestl(const T1 pbegin, const T1 pend)
 
 /** Mirinae hash wrapper */
 template <typename T>
-inline uint256 Mirinae(const T* pbegin, const T* pend, int height, uint256 prev_block)
+inline uint256 Mirinae(const T* pbegin, const T* pend, int height)
 {
     static T pblank[1];
 
@@ -283,7 +283,7 @@ inline uint256 Mirinae(const T* pbegin, const T* pend, int height, uint256 prev_
     const void* block = pbegin == pend ? pblank : pbegin;
     size_t      length  = (pend - pbegin) * sizeof(T);
 
-    mirinae(block, length, hash.begin(), height, prev_block.begin());
+    mirinae(block, hash.begin(), length, height);
 
     return hash;
 }

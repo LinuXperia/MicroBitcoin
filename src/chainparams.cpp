@@ -260,7 +260,7 @@ public:
         pchBitcoinMessageStart[2] = 0x13;
         pchBitcoinMessageStart[3] = 0x95;
 
-        pchMessageStart[0] = 0xd2;
+        pchMessageStart[0] = 0xd3;
         pchMessageStart[1] = 0xb1;
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xd8;
