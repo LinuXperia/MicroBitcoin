@@ -252,7 +252,7 @@ public:
         consensus.lwma3Height = 15;
         consensus.lwmaAveragingWindow = 90;
 
-        consensus.mirinaeHeight = 20;
+        consensus.mirinaeHeight = 1030;
         consensus.mirinaeWarmUpWindow = 100;
 
         pchBitcoinMessageStart[0] = 0x04;
