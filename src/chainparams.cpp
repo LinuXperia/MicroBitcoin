@@ -255,7 +255,7 @@ public:
         consensus.mirinaeHeight = 1030;
         consensus.mirinaeWarmUpWindow = 100;
 
-        pchBitcoinMessageStart[0] = 0x04;
+        pchBitcoinMessageStart[0] = 0x05;
         pchBitcoinMessageStart[1] = 0x26;
         pchBitcoinMessageStart[2] = 0x13;
         pchBitcoinMessageStart[3] = 0x95;
@@ -263,7 +263,7 @@ public:
         pchMessageStart[0] = 0xd4;
         pchMessageStart[1] = 0xb1;
         pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xc8;
+        pchMessageStart[3] = 0xc9;
 
         nDefaultPort = 18433;
         nPruneAfterHeight = 1000;
