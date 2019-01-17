@@ -213,9 +213,9 @@ public:
         consensus.BIP34Hash = uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
         consensus.BIP65Height = 2; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 2; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-        consensus.powLimit = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitStart = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nWarmUpWindow = 1300;
+        consensus.powLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimitStart = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nWarmUpWindow = 10;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.nBtcPowTargetSpacing = 1 * 60;
@@ -252,16 +252,16 @@ public:
         consensus.lwma3Height = 15;
         consensus.lwmaAveragingWindow = 90;
 
-        consensus.mirinaeHeight = 1030;
-        consensus.mirinaeWarmUpWindow = 100;
+        consensus.mirinaeHeight = 20;
+        consensus.mirinaeWarmUpWindow = 10;
 
-        pchBitcoinMessageStart[0] = 0x05;
+        pchBitcoinMessageStart[0] = 0xb1;
         pchBitcoinMessageStart[1] = 0x26;
-        pchBitcoinMessageStart[2] = 0x13;
-        pchBitcoinMessageStart[3] = 0x95;
+        pchBitcoinMessageStart[2] = 0x53;
+        pchBitcoinMessageStart[3] = 0x75;
 
         pchMessageStart[0] = 0xd4;
-        pchMessageStart[1] = 0xb1;
+        pchMessageStart[1] = 0x05;
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xc9;
 
