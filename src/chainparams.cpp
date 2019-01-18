@@ -258,12 +258,12 @@ public:
         pchBitcoinMessageStart[0] = 0xb1;
         pchBitcoinMessageStart[1] = 0x26;
         pchBitcoinMessageStart[2] = 0x53;
-        pchBitcoinMessageStart[3] = 0x75;
+        pchBitcoinMessageStart[3] = 0x76;
 
         pchMessageStart[0] = 0xd4;
         pchMessageStart[1] = 0x05;
         pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xc9;
+        pchMessageStart[3] = 0xd0;
 
         nDefaultPort = 18433;
         nPruneAfterHeight = 1000;
