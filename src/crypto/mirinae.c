@@ -52,7 +52,7 @@ void mirinae(const void* input, void* output, size_t length, int height)
 	unsigned char hash[64] = { 0 };
 	unsigned char offset[64] = { 0 };
 	unsigned char seed[32] = { 0 };
-	const int window = 64;
+	const int window = 32;
 	const int aperture = 32;
 
 	memcpy(seed, input + 4, (36 - 4) * sizeof(*input));
