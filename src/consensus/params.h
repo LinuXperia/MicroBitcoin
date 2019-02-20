@@ -62,7 +62,7 @@ struct Params {
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     int64_t nWarmUpWindow;
-    int64_t mirinaeWarmUpWindow;
+    int64_t balloonWarmUpWindow;
     int64_t nPowTargetSpacing;
     int64_t nBtcPowTargetSpacing;
     int64_t nPowTargetTimespan;
@@ -74,7 +74,7 @@ struct Params {
     int mbcHeight;
     int lwma2Height;
     int lwma3Height;
-    int mirinaeHeight;
+    int balloonHeight;
     int lwmaAveragingWindow;
     std::string premineAddress;
     CAmount premineValue;

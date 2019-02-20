@@ -217,10 +217,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     const auto isLwma3 = nHeight >= params.lwma3Height;
 
     const auto mbcWarmUp = (isHardfork && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow);
-    const auto mirinaeWarmUp = (nHeight > params.mirinaeHeight && nHeight < params.mirinaeHeight + params.mirinaeWarmUpWindow);
+    const auto balloonWarmUp = (nHeight > params.balloonHeight && nHeight < params.balloonHeight + params.balloonWarmUpWindow);
 
     // Pow warm-up window
-    if (mbcWarmUp || mirinaeWarmUp) {
+    if (mbcWarmUp || balloonWarmUp) {
         return UintToArith256(params.powLimitStart).GetCompact();
     }
     

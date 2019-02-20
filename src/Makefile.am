@@ -282,12 +282,10 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sphlib/sph_types.h \
   crypto/sphlib/sph_groestl.cpp \
   crypto/sphlib/sph_groestl.h \
-  crypto/kupyna/kupyna512.c \
-  crypto/kupyna/kupyna512.h \
-  crypto/kupyna/kupyna_tables.c \
-  crypto/kupyna/kupyna_tables.h \
-  crypto/mirinae.c \
-  crypto/mirinae.h
+  crypto/sphlib/sph_shabal.c \
+  crypto/sphlib/sph_shabal.h \
+  crypto/balloon.c \
+  crypto/balloon.h
 
 if EXPERIMENTAL_ASM
 crypto_libbitcoin_crypto_a_SOURCES += crypto/sha256_sse4.cpp

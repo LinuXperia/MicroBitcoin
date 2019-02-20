@@ -7,7 +7,7 @@
 #ifndef BITCOIN_HASH_H
 #define BITCOIN_HASH_H
 
-#include <crypto/mirinae.h>
+#include <crypto/balloon.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
 #include <prevector.h>
@@ -272,9 +272,9 @@ inline uint256 Groestl(const T1 pbegin, const T1 pend)
     return hash[1];
 }
 
-/** Mirinae hash wrapper */
+/** Balloon hash wrapper */
 template <typename T>
-inline uint256 Mirinae(const T* pbegin, const T* pend, int height)
+inline uint256 Balloon(const T* pbegin, const T* pend)
 {
     static T pblank[1];
 
@@ -283,7 +283,7 @@ inline uint256 Mirinae(const T* pbegin, const T* pend, int height)
     const void* block = pbegin == pend ? pblank : pbegin;
     size_t      length  = (pend - pbegin) * sizeof(T);
 
-    mirinae(block, hash.begin(), length, height);
+    balloon(block, hash.begin(), length);
 
     return hash;
 }

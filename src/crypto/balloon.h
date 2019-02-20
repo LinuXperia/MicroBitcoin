@@ -2,16 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef MBCHASH_H
-#define MBCHASH_H
-
-#include <stddef.h>
+#ifndef BALLOON_H
+#define BALLOON_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void mirinae(const void* input, void* output, size_t length, int height);
+void balloon(const void *input, void *output, int length);
 
 #ifdef __cplusplus
 }
