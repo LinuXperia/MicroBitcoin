@@ -7,7 +7,7 @@
 #ifndef BITCOIN_HASH_H
 #define BITCOIN_HASH_H
 
-#include <crypto/balloon.h>
+#include <crypto/rainforest.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
 #include <prevector.h>
@@ -272,9 +272,9 @@ inline uint256 Groestl(const T1 pbegin, const T1 pend)
     return hash[1];
 }
 
-/** Balloon hash wrapper */
+/** Rainforest hash wrapper */
 template <typename T>
-inline uint256 Balloon(const T* pbegin, const T* pend)
+inline uint256 Rainforest(const T* pbegin, const T* pend)
 {
     static T pblank[1];
 
@@ -283,7 +283,7 @@ inline uint256 Balloon(const T* pbegin, const T* pend)
     const void* block = pbegin == pend ? pblank : pbegin;
     size_t      length  = (pend - pbegin) * sizeof(T);
 
-    balloon(block, hash.begin(), length);
+    rf256_hash(block, hash.begin(), length);
 
     return hash;
 }
