@@ -131,9 +131,9 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     next_target = t * sum_target;
 
     // Don't fix this (may cause network split)
-    if (solvetime_sum < (8 * T) / 10) {
-        next_target = previous_diff * 100 / 106;
-    }
+    // if (solvetime_sum < (8 * T) / 10) {
+    //     next_target = previous_diff * 100 / 106;
+    // }
 
     return next_target.GetCompact();
 }
