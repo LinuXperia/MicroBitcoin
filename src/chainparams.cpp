@@ -118,8 +118,8 @@ public:
         consensus.lwma3Height = 654000;
         consensus.lwmaAveragingWindow = 90;
 
-        consensus.balloonHeight = 999999999;
-        consensus.balloonWarmUpWindow = 0;
+        consensus.rainforestHeight = 999999999;
+        consensus.rainforestWarmUpWindow = 0;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -252,8 +252,8 @@ public:
         consensus.lwma3Height = 15;
         consensus.lwmaAveragingWindow = 90;
 
-        consensus.balloonHeight = 20;
-        consensus.balloonWarmUpWindow = 0;
+        consensus.rainforestHeight = 20;
+        consensus.rainforestWarmUpWindow = 0;
 
         pchBitcoinMessageStart[0] = 0xb1;
         pchBitcoinMessageStart[1] = 0x26;
@@ -265,7 +265,7 @@ public:
         pchMessageStart[2] = 0xb5;
         pchMessageStart[3] = 0xd0;
 
-        nDefaultPort = 18433;
+        nDefaultPort = 16403;
         nPruneAfterHeight = 1000;
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN * COIN_RATIO);
@@ -276,7 +276,8 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        // vSeeds.emplace_back("", true);
+        vSeeds.emplace_back("seed.sman.pw", true);
+        vSeeds.emplace_back("seed.microbitcoin.org", true);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,71);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,73);
@@ -352,8 +353,8 @@ public:
         consensus.lwma3Height = 999999999;
         consensus.lwmaAveragingWindow = 90;
 
-        consensus.balloonHeight = 999999999;
-        consensus.balloonWarmUpWindow = 100;
+        consensus.rainforestHeight = 999999999;
+        consensus.rainforestWarmUpWindow = 100;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;
@@ -365,7 +366,7 @@ public:
         pchMessageStart[2] = 0xb6;
         pchMessageStart[3] = 0xd9;
 
-        nDefaultPort = 18444;
+        nDefaultPort = 26403;
         nPruneAfterHeight = 1000;
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN * COIN_RATIO);
