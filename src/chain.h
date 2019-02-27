@@ -12,6 +12,7 @@
 #include <pow.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <microbitcoin.h>
 
 #include <vector>
 
@@ -295,6 +296,11 @@ public:
         return *phashBlock;
     }
 
+    uint256 GetBlockWorkHash(int nBlockHeight) const
+    {
+        return GetBlockHeader().GetWorkHash(nBlockHeight);
+    }
+
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
@@ -358,8 +364,6 @@ public:
     //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
-
-    bool IsMicroBitcoin() const;
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);
@@ -419,7 +423,8 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
-        return block.GetHash();
+
+        return block.GetWorkHash(nHeight);
     }
 
 

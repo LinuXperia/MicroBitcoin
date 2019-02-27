@@ -43,6 +43,7 @@
 #include <validationinterface.h>
 #include <versionbits.h>
 #include <warnings.h>
+#include <microbitcoin.h>
 
 #include <atomic>
 #include <future>
@@ -153,7 +154,7 @@ public:
     BlockMap mapBlockIndex;
     std::multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
     CBlockIndex *pindexBestInvalid = nullptr;
-    bool LoadBlockIndex(const Consensus::Params& consensus_params, CBlockTreeDB& blocktree);
+    bool LoadBlockIndex(const Consensus::Params& consensusParams, CBlockTreeDB& blocktree);
     bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock);
     bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex);
     bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock);
@@ -1020,7 +1021,8 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
                 } catch (const std::exception& e) {
                     return error("%s: Deserialize or I/O error - %s", __func__, e.what());
                 }
-                hashBlock = header.GetHash();
+
+                hashBlock = header.GetWorkHash(GetBlockHeight(header.hashPrevBlock));
                 if (txOut->GetHash() != hash)
                     return error("%s: txid mismatch", __func__);
                 return true;
@@ -1095,11 +1097,11 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
-    bool isFork = block.nTime > consensusParams.mbcTimestamp;
-
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, isFork, consensusParams))
+    int nHeight = GetBlockHeight(block);
+    if (!CheckProofOfWork(block.GetWorkHash(nHeight), block.nBits, nHeight, consensusParams)) {
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+    }
 
     return true;
 }
@@ -1115,13 +1117,9 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
         return false;
     }
 
-    if (block.GetHash() != pindex->GetBlockHash()) {
-        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
+    if (block.GetWorkHash(pindex->nHeight) != pindex->GetBlockHash()) {
+        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetWorkHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
-    }
-
-    if (pindex->nHeight >= consensusParams.mbcHeight && !block.IsMicroBitcoin()) {
-        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): Wrong hardfork version for %s at %s", pindex->ToString(), pindex->GetBlockPos().ToString());
     }
     
     return true;
@@ -1132,7 +1130,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     const CAmount initSubsidy = 50 * COIN * COIN_RATIO;
 
     // Old subsidy
-    if (nHeight < consensusParams.mbcHeight)
+    if (nHeight < (consensusParams.mbcHeight + 1))
     {
         const int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
         // Force block reward to zero when right shift is undefined.
@@ -1149,10 +1147,10 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 
     // New subsidy
     const int halvingRatio = (consensusParams.nSubsidyHalvingInterval * 10) / consensusParams.nSubsidyHalvingInterval;
-    const CAmount initSubsidyMBC = initSubsidy >> (consensusParams.mbcHeight / consensusParams.nSubsidyHalvingInterval);
-    const int lastSubsidyHeightBTC = (consensusParams.mbcHeight / consensusParams.nSubsidyHalvingInterval) * consensusParams.nSubsidyHalvingInterval;
-    const int remainSubsidyHeightBTC = consensusParams.nSubsidyHalvingInterval - (consensusParams.mbcHeight - lastSubsidyHeightBTC);
-    const int newSubsidyHeightMBC = consensusParams.mbcHeight + remainSubsidyHeightBTC * halvingRatio;
+    const CAmount initSubsidyMBC = initSubsidy >> ((consensusParams.mbcHeight + 1) / consensusParams.nSubsidyHalvingInterval);
+    const int lastSubsidyHeightBTC = ((consensusParams.mbcHeight + 1) / consensusParams.nSubsidyHalvingInterval) * consensusParams.nSubsidyHalvingInterval;
+    const int remainSubsidyHeightBTC = consensusParams.nSubsidyHalvingInterval - ((consensusParams.mbcHeight + 1) - lastSubsidyHeightBTC);
+    const int newSubsidyHeightMBC = (consensusParams.mbcHeight + 1) + remainSubsidyHeightBTC * halvingRatio;
     if (nHeight < newSubsidyHeightMBC) {
         const CAmount nSubsidy = initSubsidyMBC / halvingRatio;
         return nSubsidy;
@@ -1743,7 +1741,7 @@ public:
 // Protected by cs_main
 static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS];
 
-static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) {
+static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusParams) {
     AssertLockHeld(cs_main);
 
     // BIP16 didn't become active until Apr 1 2012
@@ -1753,34 +1751,34 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Start enforcing the DERSIG (BIP66) rule
-    if (pindex->nHeight >= consensusparams.BIP66Height) {
+    if (pindex->nHeight >= consensusParams.BIP66Height) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
     // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    if (pindex->nHeight >= consensusparams.BIP65Height) {
+    if (pindex->nHeight >= consensusParams.BIP65Height) {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (VersionBitsState(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
     // Start enforcing WITNESS rules using versionbits logic.
-    if (IsWitnessEnabled(pindex->pprev, consensusparams)) {
+    if (IsWitnessEnabled(pindex->pprev, consensusParams)) {
         flags |= SCRIPT_VERIFY_WITNESS;
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
     // After hardfork we start accepting replay protected txns (OLD)
-    if (pindex->nHeight >= consensusparams.mbcHeight && pindex->nHeight < consensusparams.lwma2Height) {
+    if (pindex->nHeight > (consensusParams.mbcHeight + 1) && pindex->nHeight < consensusParams.lwma2Height) {
         flags |= SCRIPT_VERIFY_STRICTENC;
         flags |= SCRIPT_ENABLE_SIGHASH_FORKID_OLD;
     }
 
     // New replay protection
-    if (pindex->nHeight >= consensusparams.lwma2Height) {
+    if (pindex->nHeight >= consensusParams.lwma2Height) {
         flags |= SCRIPT_VERIFY_STRICTENC;
         flags |= SCRIPT_ENABLE_SIGHASH_FORKID;
     }
@@ -1807,8 +1805,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     AssertLockHeld(cs_main);
     assert(pindex);
     // pindex->phashBlock can be null if called by CreateNewBlock/TestBlockValidity
+
     assert((pindex->phashBlock == nullptr) ||
-           (*pindex->phashBlock == block.GetHash()));
+           (*pindex->phashBlock == block.GetWorkHash(pindex->nHeight)));
     int64_t nTimeStart = GetTimeMicros();
 
     // Check it again in case a previous version let a bad block in
@@ -1833,7 +1832,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
-    if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
+    if (block.GetWorkHash(GetBlockHeight(block)) == chainparams.GetConsensus().hashGenesisBlock) {
         if (!fJustCheck)
             view.SetBestBlock(pindex->GetBlockHash());
         return true;
@@ -1995,14 +1994,13 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
-    auto isPremineBlock = pindex->nHeight == chainparams.GetConsensus().mbcHeight;
+    auto isPremineBlock = pindex->nHeight == (chainparams.GetConsensus().mbcHeight + 1);
     auto premineValue = chainparams.GetConsensus().premineValue;
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
     if (premineValue) blockReward += premineValue;
     if (block.vtx[0]->GetValueOut() > blockReward)
     {
-        // std::cout << "\n\n\n\n" << blockReward << "\n\n\n\n";
         return state.DoS(100, error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", block.vtx[0]-> GetValueOut(), blockReward), REJECT_INVALID, "bad-cb-amount");
     }
 
@@ -2662,7 +2660,7 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
 
             bool fInvalidFound = false;
             std::shared_ptr<const CBlock> nullBlockPtr;
-            if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace))
+            if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetWorkHash(GetBlockHeight(pblock->hashPrevBlock)) == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace))
                 return false;
 
             if (fInvalidFound) {
@@ -2845,7 +2843,7 @@ bool ResetBlockFailureFlags(CBlockIndex *pindex) {
 CBlockIndex* CChainState::AddToBlockIndex(const CBlockHeader& block)
 {
     // Check for duplicate
-    uint256 hash = block.GetHash();
+    uint256 hash = block.GetWorkHash(GetBlockHeight(block));
     BlockMap::iterator it = mapBlockIndex.find(hash);
     if (it != mapBlockIndex.end())
         return it->second;
@@ -3016,11 +3014,11 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
-    bool isFork = block.nTime > consensusParams.mbcTimestamp;
-
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, isFork, consensusParams))
+    int nHeight = GetBlockHeight(block);
+    if (fCheckPOW && !CheckProofOfWork(block.GetWorkHash(nHeight), block.nBits, nHeight, consensusParams)) {
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
+    }
 
     return true;
 }
@@ -3164,11 +3162,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
-
-    // Check hardfork version
-    if (nHeight >= Params().GetConsensus().mbcHeight && !block.IsMicroBitcoin())
-        return state.DoS(0, false, REJECT_INVALID, "not-hardfork", false, "incorrect block version");
-
+    
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
@@ -3180,25 +3174,30 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
         // GetLastCheckpoint finds the last checkpoint in MapCheckpoints that's in our
         // MapBlockIndex.
         CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(params.Checkpoints());
-        if (pcheckpoint && nHeight < pcheckpoint->nHeight)
+        if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
             return state.DoS(100, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight), REJECT_CHECKPOINT, "bad-fork-prior-to-checkpoint");
+        }
     }
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast()) {
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
+    }
 
     // Check timestamp
-    if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
+    int64_t FTL = nHeight >= consensusParams.rainforestHeight ? consensusParams.lwmaMaxFutureBlockTime : MAX_FUTURE_BLOCK_TIME;
+    if (block.GetBlockTime() > nAdjustedTime + FTL) {
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
+    }
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
-       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
+    if ((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
+        (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
+        (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height)) {
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
+        }
 
     return true;
 }
@@ -3293,8 +3292,9 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
-    // Check for duplicate
-    uint256 hash = block.GetHash();
+    int nHeight = GetBlockHeight(block);
+    uint256 hash = block.GetWorkHash(nHeight);
+
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
     CBlockIndex *pindex = nullptr;
     if (hash != chainparams.GetConsensus().hashGenesisBlock) {
@@ -3494,7 +3494,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
-            return error("%s: AcceptBlock FAILED (%s)", __func__, state.GetDebugMessage());
+            return error("%s: AcceptBlock FAILED (%s), Bad hash: %s", __func__, state.GetDebugMessage(), pblock->GetWorkHash(GetBlockHeight(pblock->hashPrevBlock)).ToString());
         }
     }
     NotifyHeaderTip();
@@ -3751,9 +3751,9 @@ CBlockIndex * CChainState::InsertBlockIndex(const uint256& hash)
     return pindexNew;
 }
 
-bool CChainState::LoadBlockIndex(const Consensus::Params& consensus_params, CBlockTreeDB& blocktree)
+bool CChainState::LoadBlockIndex(const Consensus::Params& consensusParams, CBlockTreeDB& blocktree)
 {
-    if (!blocktree.LoadBlockIndexGuts(consensus_params, [this](const uint256& hash){ return this->InsertBlockIndex(hash); })) {
+    if (!blocktree.LoadBlockIndexGuts(consensusParams, [this](const uint256& hash){ return this->InsertBlockIndex(hash); })) {
         return false;
     }
 
@@ -4259,7 +4259,7 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
     // mapBlockIndex. Note that we can't use chainActive here, since it is
     // set based on the coins db, not the block index db, which is the only
     // thing loaded at this point.
-    if (mapBlockIndex.count(chainparams.GenesisBlock().GetHash()))
+    if (mapBlockIndex.count(chainparams.GenesisBlock().GetWorkHash(0)))
         return true;
 
     try {
@@ -4333,7 +4333,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                 nRewind = blkdat.GetPos();
 
                 // detect out of order blocks, and store them for later
-                uint256 hash = block.GetHash();
+                uint256 hash = block.GetWorkHash(GetBlockHeight(block));
                 if (hash != chainparams.GetConsensus().hashGenesisBlock && mapBlockIndex.find(block.hashPrevBlock) == mapBlockIndex.end()) {
                     LogPrint(BCLog::REINDEX, "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
                             block.hashPrevBlock.ToString());
@@ -4378,14 +4378,14 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                         std::shared_ptr<CBlock> pblockrecursive = std::make_shared<CBlock>();
                         if (ReadBlockFromDisk(*pblockrecursive, it->second, chainparams.GetConsensus()))
                         {
-                            LogPrint(BCLog::REINDEX, "%s: Processing out of order child %s of %s\n", __func__, pblockrecursive->GetHash().ToString(),
+                            LogPrint(BCLog::REINDEX, "%s: Processing out of order child %s of %s\n", __func__, pblockrecursive->GetWorkHash(GetBlockHeight(pblockrecursive->hashPrevBlock)).ToString(),
                                     head.ToString());
                             LOCK(cs_main);
                             CValidationState dummy;
                             if (g_chainstate.AcceptBlock(pblockrecursive, dummy, chainparams, nullptr, true, &it->second, nullptr))
                             {
                                 nLoaded++;
-                                queue.push_back(pblockrecursive->GetHash());
+                                queue.push_back(pblockrecursive->GetWorkHash(GetBlockHeight(pblockrecursive->hashPrevBlock)));
                             }
                         }
                         range.first++;
@@ -4479,9 +4479,6 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
         assert((pindexFirstNeverProcessed != nullptr) == (pindex->nChainTx == 0)); // nChainTx != 0 is used to signal that all parent blocks have been processed (but may have been pruned).
         assert((pindexFirstNotTransactionsValid != nullptr) == (pindex->nChainTx == 0));
         assert(pindex->nHeight == nHeight); // nHeight must be consistent.
-        // Check hardfork version
-        if (pindex->nHeight >= consensusParams.mbcHeight)
-            assert(pindex->IsMicroBitcoin());
         assert(pindex->pprev == nullptr || pindex->nChainWork >= pindex->pprev->nChainWork); // For every block except the genesis block, the chainwork must be larger than the parent's.
         assert(nHeight < 2 || (pindex->pskip && (pindex->pskip->nHeight < nHeight))); // The pskip pointer must point back for all but the first 2 blocks.
         assert(pindexFirstNotTreeValid == nullptr); // All mapBlockIndex entries must at least be TREE valid

@@ -65,15 +65,13 @@ public:
         return (nBits == 0);
     }
 
-    uint256 GetHash() const;
-    uint256 GetHash(const Consensus::Params& params) const;
+    uint256 GetWorkHash(int nHeight, int nIndex = 0) const;
+    uint256 GetWorkHash(const Consensus::Params& params, int nHeight) const;
 
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
     }
-
-    bool IsMicroBitcoin() const;
 };
 
 
@@ -124,7 +122,7 @@ public:
         return block;
     }
 
-    std::string ToString() const;
+    std::string ToString(int nHeight) const;
 };
 
 /** Describes a place in the block chain to another node such that if the

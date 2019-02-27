@@ -16,6 +16,7 @@
 #include <wallet/wallet.h>
 #include <merkleblock.h>
 #include <core_io.h>
+#include <microbitcoin.h>
 
 #include <wallet/rpcwallet.h>
 
@@ -360,11 +361,14 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     std::vector<uint256> vMatch;
     std::vector<unsigned int> vIndex;
     unsigned int txnIndex = 0;
+
+    int nHeight = GetBlockHeight(merkleBlock.header.hashPrevBlock);
     if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) == merkleBlock.header.hashMerkleRoot) {
 
         LOCK(cs_main);
 
-        if (!mapBlockIndex.count(merkleBlock.header.GetHash()) || !chainActive.Contains(mapBlockIndex[merkleBlock.header.GetHash()]))
+        // GetBlockHeight(merkleBlock.header.hashPrevBlock)
+        if (!mapBlockIndex.count(merkleBlock.header.GetWorkHash(nHeight)) || !chainActive.Contains(mapBlockIndex[merkleBlock.header.GetWorkHash(nHeight)]))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
 
         std::vector<uint256>::const_iterator it;
@@ -379,7 +383,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     }
 
     wtx.nIndex = txnIndex;
-    wtx.hashBlock = merkleBlock.header.GetHash();
+    wtx.hashBlock = merkleBlock.header.GetWorkHash(nHeight);
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -1250,7 +1254,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                       "block from time %d, which is after or within %d seconds of key creation, and "
                                       "could contain transactions pertaining to the key. As a result, transactions "
                                       "and coins using this key may not appear in the wallet. This error could be "
-                                      "caused by pruning or data corruption (see bitcoind log for details) and could "
+                                      "caused by pruning or data corruption (see microbitcoind log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
                                       "and -rescan options).",
                                 GetImportTimestamp(request, now), scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));

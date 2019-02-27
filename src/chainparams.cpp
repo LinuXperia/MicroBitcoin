@@ -110,14 +110,17 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000000000000005214481d2d96f898e3d5416e43359c145944a909d242e0"); //506067
 
-        consensus.mbcHeight = 525001;
-        consensus.mbcTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
+        consensus.mbcHeight = 525000;
         consensus.premineValue = 1050000 * COIN * COIN_RATIO; // 5%
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
         consensus.lwma2Height = 591000;
         consensus.lwma3Height = 654000;
         consensus.lwmaAveragingWindow = 90;
+        consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
+
+        consensus.rainforestHeight = 830000;
+        consensus.rainforestWarmUpWindow = 100;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -138,12 +141,17 @@ public:
         nPruneAfterHeight = 100000;
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN * COIN_RATIO);
-        consensus.hashGenesisBlock = genesis.GetHash(consensus);
+        consensus.hashGenesisBlock = genesis.GetWorkHash(consensus, 0);
         assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         // vSeeds.emplace_back("", true);
+        vFixedSeeds.clear();
+        vSeeds.clear();
+        // ToDo: Fix DNS seeds
+        // vSeeds.emplace_back("seed.sman.pw", true);
+        // vSeeds.emplace_back("seed.microbitcoin.org", true);
         
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,26);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,51);
@@ -207,13 +215,13 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP34Height = 21111;
-        consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
+        consensus.BIP34Height = 17;
+        consensus.BIP34Hash = uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
         consensus.BIP65Height = 2; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
         consensus.BIP66Height = 2; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-        consensus.powLimit = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.powLimitStart = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nWarmUpWindow = 1;
+        consensus.powLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimitStart = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nWarmUpWindow = 10;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.nBtcPowTargetSpacing = 1 * 60;
@@ -242,37 +250,38 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000000002e9e7b00e1f6dc5123a04aad68dd0f0968d8c7aa45f6640795c37b1"); //1135275
 
-        consensus.mbcHeight = 1;
-        consensus.mbcTimestamp = 1537036775;
-        consensus.premineValue = 10000000 * COIN * COIN_RATIO;
+        consensus.mbcHeight = 5;
+        consensus.premineValue = 100000 * COIN * COIN_RATIO;
         consensus.premineAddress = "Vmd7hEpGhuKAzDYpq9qtbrf28pKKfULsbP";
 
-        consensus.lwma2Height = 999999999;
-        consensus.lwma3Height = 2;
+        consensus.lwma2Height = 10;
+        consensus.lwma3Height = 15;
         consensus.lwmaAveragingWindow = 90;
+        consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
 
-        pchBitcoinMessageStart[0] = 0x03;
-        pchBitcoinMessageStart[1] = 0x11;
-        pchBitcoinMessageStart[2] = 0x08;
-        pchBitcoinMessageStart[3] = 0x06;
+        consensus.rainforestHeight = 20;
+        consensus.rainforestWarmUpWindow = 100;
 
-        pchMessageStart[0] = 0xf2;
-        pchMessageStart[1] = 0xb1;
+        pchBitcoinMessageStart[0] = 0xd1;
+        pchBitcoinMessageStart[1] = 0x23;
+        pchBitcoinMessageStart[2] = 0x51;
+        pchBitcoinMessageStart[3] = 0x76;
+
+        pchMessageStart[0] = 0xa4;
+        pchMessageStart[1] = 0x09;
         pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xd6;
+        pchMessageStart[3] = 0xda;
 
-        nDefaultPort = 18433;
+        nDefaultPort = 16403;
         nPruneAfterHeight = 1000;
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN * COIN_RATIO);
-        consensus.hashGenesisBlock = genesis.GetHash(consensus);
+        consensus.hashGenesisBlock = genesis.GetWorkHash(consensus, 0);
         assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        // nodes with support for servicebits filtering should be at the top
-        // vSeeds.emplace_back("", true);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,71);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,73);
@@ -285,7 +294,6 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
-
 
         checkpointData = {
             {
@@ -342,13 +350,16 @@ public:
         consensus.defaultAssumeValid = uint256S("0x00");
 
         consensus.mbcHeight = 1000;
-        consensus.mbcTimestamp = 1527625482; // Tuesday, 29 May 2018 р., 20:24:42
         consensus.premineValue = 2000000 * COIN * COIN_RATIO;
         consensus.premineAddress = "BfrckfYi7xaSGmMec4T2keu6xczQSx7rxo";
 
         consensus.lwma2Height = 200;
         consensus.lwma3Height = 999999999;
         consensus.lwmaAveragingWindow = 90;
+        consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
+
+        consensus.rainforestHeight = 999999999;
+        consensus.rainforestWarmUpWindow = 100;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;
@@ -360,11 +371,11 @@ public:
         pchMessageStart[2] = 0xb6;
         pchMessageStart[3] = 0xd9;
 
-        nDefaultPort = 18444;
+        nDefaultPort = 26403;
         nPruneAfterHeight = 1000;
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN * COIN_RATIO);
-        consensus.hashGenesisBlock = genesis.GetHash(consensus);
+        consensus.hashGenesisBlock = genesis.GetWorkHash(consensus, 0);
         assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 

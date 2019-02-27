@@ -7,6 +7,7 @@
 #ifndef BITCOIN_HASH_H
 #define BITCOIN_HASH_H
 
+#include <crypto/rainforest.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
 #include <prevector.h>
@@ -19,7 +20,7 @@
 #include <vector>
 
 extern "C" {
-#include <sphlib/sph_groestl.h>
+#include <crypto/sphlib/sph_groestl.h>
 } // "C"
 
 typedef uint256 ChainCode;
@@ -266,9 +267,25 @@ inline uint256 Groestl(const T1 pbegin, const T1 pend)
 
     sph_groestl512_init(&ctx_groestl);
     sph_groestl512 (&ctx_groestl, static_cast<const void*>(&hash[0]), 64);
-    sph_groestl512_close(&ctx_groestl, static_cast<void*>(&hash[2]));
+    sph_groestl512_close(&ctx_groestl, static_cast<void*>(&hash[1]));
 
-    return hash[2];
+    return hash[1];
+}
+
+/** Rainforest hash wrapper */
+template <typename T>
+inline uint256 Rainforest(const T* pbegin, const T* pend)
+{
+    static T pblank[1];
+
+    uint256 hash;
+
+    const void* block = pbegin == pend ? pblank : pbegin;
+    size_t      length  = (pend - pbegin) * sizeof(T);
+
+    rf256_hash(block, hash.begin(), length);
+
+    return hash;
 }
 
 #endif // BITCOIN_HASH_H

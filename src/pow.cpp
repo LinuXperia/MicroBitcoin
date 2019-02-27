@@ -1,5 +1,8 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018-2019 MicroBitcoin developers
+// Copyright (c) 2017-2018 The Bitcoin Gold developers
+// Copyright (c) 2018 Zawy
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -87,21 +90,15 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const Consen
     return bnNew.GetCompact();
 }
 
-// LWMA for BTC clones
-// Copyright (c) 2017-2018 The Bitcoin Gold developers
-// Copyright (c) 2018 Zawy (M.I.T license continued)
-// Algorithm by zawy, a modification of WT-144 by Tom Harding
-// Code by h4x3rotab of BTC Gold, modified/updated by zawy
-// Updated to LWMA2 by iamstenman
-// https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-388386175
-
 unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
     const int64_t T = params.nPowTargetSpacing;
     const int64_t N = params.lwmaAveragingWindow;
     const int64_t k = N * (N + 1) * T / 2;
     const int height = pindexLast->nHeight;
-    assert(height > N);
+    const arith_uint256 powLimit = UintToArith256(params.powLimitStart);
+
+    if (height < N) { return powLimit.GetCompact(); }
 
     arith_uint256 sum_target, previous_diff, next_target;
     int64_t t = 0, j = 0, solvetime_sum;
@@ -133,19 +130,13 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     }
     next_target = t * sum_target;
 
-    if (solvetime_sum < (8 * T) / 10) {
-        next_target = previous_diff * 100 / 106;
-    }
+    // Don't fix this (may cause network split)
+    // if (solvetime_sum < (8 * T) / 10) {
+    //     next_target = previous_diff * 100 / 106;
+    // }
 
     return next_target.GetCompact();
 }
-
-// Copyright (c) 2017-2018 The Bitcoin Gold developers
-// Copyright (c) 2018 Zawy & MicroBitcoin (LWMA-3)
-// Algorithm by zawy, a modification of WT-144 by Tom Harding
-// https://github.com/zawy12/difficulty-algorithms/issues/3#issuecomment-388386175
-// Updated to LWMA3 by iamstenman
-// MIT License
 
 unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
 {
@@ -210,15 +201,18 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     int nHeight = pindexLast->nHeight + 1;
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
-    const auto isHardfork = nHeight >= params.mbcHeight;
+    const auto isHardfork = nHeight > params.mbcHeight;
     const auto isLwma2 = nHeight >= params.lwma2Height && nHeight < params.lwma3Height;
     const auto isLwma3 = nHeight >= params.lwma3Height;
 
-    // Pow limit start for warm-up period
-    if (isHardfork && nHeight < params.mbcHeight + params.nWarmUpWindow) {
+    const auto mbcWarmUp = (isHardfork && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow);
+    const auto rainforestWarmUp = (nHeight > params.rainforestHeight && nHeight < params.rainforestHeight + params.rainforestWarmUpWindow);
+
+    // Pow warm-up window
+    if (mbcWarmUp || rainforestWarmUp) {
         return UintToArith256(params.powLimitStart).GetCompact();
     }
-
+    
     if (params.fPowNoRetargeting) return pindexLast->nBits;
 
     const auto difficultyAdjustmentInterval = isHardfork
@@ -252,7 +246,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     } else if (isLwma3) {
         return Lwma3CalculateNextWorkRequired(pindexLast, params);
     } else {
-        return pblock->IsMicroBitcoin()
+        return pindexLast->nHeight > params.mbcHeight
             ? DarkGravityWave3(pindexLast, params)
             : BitcoinNextWorkRequired(pindexLast, pblock, params);
     }
@@ -283,7 +277,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, bool ifForked, const Consensus::Params& params)
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nHeight, const Consensus::Params& params)
 {
     bool fNegative;
     bool fOverflow;
@@ -292,7 +286,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, bool ifForked, const Con
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(ifForked ? params.powLimitStart : params.powLimit)) {
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(nHeight > params.mbcHeight ? params.powLimitStart : params.powLimit)) {
         return false;
     }
     

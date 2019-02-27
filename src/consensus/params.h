@@ -62,6 +62,7 @@ struct Params {
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     int64_t nWarmUpWindow;
+    int64_t rainforestWarmUpWindow;
     int64_t nPowTargetSpacing;
     int64_t nBtcPowTargetSpacing;
     int64_t nPowTargetTimespan;
@@ -73,8 +74,9 @@ struct Params {
     int mbcHeight;
     int lwma2Height;
     int lwma3Height;
+    int rainforestHeight;
     int lwmaAveragingWindow;
-    int64_t mbcTimestamp;
+    int64_t lwmaMaxFutureBlockTime;
     std::string premineAddress;
     CAmount premineValue;
 };

@@ -5,9 +5,9 @@
 
 DIST_SUBDIRS = secp256k1 univalue
 
-AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
-AM_CXXFLAGS = $(HARDENED_CXXFLAGS) $(ERROR_CXXFLAGS)
-AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
+AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS)
+AM_CXXFLAGS = $(ERROR_CXXFLAGS)
+AM_CPPFLAGS =
 EXTRA_LIBRARIES =
 
 if EMBEDDED_UNIVALUE
@@ -86,8 +86,6 @@ BITCOIN_CORE_H = \
   chain.h \
   chainparams.h \
   bignum.h \
-  sphlib/sph_types.h \
-  sphlib/sph_groestl.h \
   chainparamsbase.h \
   chainparamsseeds.h \
   checkpoints.h \
@@ -179,8 +177,8 @@ BITCOIN_CORE_H = \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
-  zmq/zmqpublishnotifier.h
-
+  zmq/zmqpublishnotifier.h \
+  microbitcoin.h
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -230,6 +228,7 @@ libbitcoin_server_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
+  microbitcoin.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
@@ -279,7 +278,12 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha256.cpp \
   crypto/sha256.h \
   crypto/sha512.cpp \
-  crypto/sha512.h
+  crypto/sha512.h \
+  crypto/sphlib/sph_types.h \
+  crypto/sphlib/sph_groestl.cpp \
+  crypto/sphlib/sph_groestl.h \
+  crypto/rainforest.c \
+  crypto/rainforest.h
 
 if EXPERIMENTAL_ASM
 crypto_libbitcoin_crypto_a_SOURCES += crypto/sha256_sse4.cpp
@@ -298,7 +302,6 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
-  sphlib/groestl.cpp \
   prevector.h \
   primitives/block.h \
   primitives/transaction.cpp \
