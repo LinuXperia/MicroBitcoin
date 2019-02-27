@@ -76,6 +76,7 @@ struct Params {
     int lwma3Height;
     int rainforestHeight;
     int lwmaAveragingWindow;
+    int64_t lwmaMaxFutureBlockTime;
     std::string premineAddress;
     CAmount premineValue;
 };

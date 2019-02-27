@@ -117,9 +117,10 @@ public:
         consensus.lwma2Height = 591000;
         consensus.lwma3Height = 654000;
         consensus.lwmaAveragingWindow = 90;
+        consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
 
-        consensus.rainforestHeight = 999999999;
-        consensus.rainforestWarmUpWindow = 0;
+        consensus.rainforestHeight = 830000;
+        consensus.rainforestWarmUpWindow = 100;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -146,6 +147,11 @@ public:
 
         // Note that of those with the service bits flag, most only support a subset of possible options
         // vSeeds.emplace_back("", true);
+        vFixedSeeds.clear();
+        vSeeds.clear();
+        // ToDo: Fix DNS seeds
+        // vSeeds.emplace_back("seed.sman.pw", true);
+        // vSeeds.emplace_back("seed.microbitcoin.org", true);
         
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,26);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,51);
@@ -251,19 +257,20 @@ public:
         consensus.lwma2Height = 10;
         consensus.lwma3Height = 15;
         consensus.lwmaAveragingWindow = 90;
+        consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
 
         consensus.rainforestHeight = 20;
-        consensus.rainforestWarmUpWindow = 0;
+        consensus.rainforestWarmUpWindow = 100;
 
-        pchBitcoinMessageStart[0] = 0xb1;
-        pchBitcoinMessageStart[1] = 0x26;
-        pchBitcoinMessageStart[2] = 0x53;
+        pchBitcoinMessageStart[0] = 0xd1;
+        pchBitcoinMessageStart[1] = 0x23;
+        pchBitcoinMessageStart[2] = 0x51;
         pchBitcoinMessageStart[3] = 0x76;
 
-        pchMessageStart[0] = 0xd4;
-        pchMessageStart[1] = 0x05;
+        pchMessageStart[0] = 0xa4;
+        pchMessageStart[1] = 0x09;
         pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xd0;
+        pchMessageStart[3] = 0xda;
 
         nDefaultPort = 16403;
         nPruneAfterHeight = 1000;
@@ -275,9 +282,6 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("seed.sman.pw", true);
-        vSeeds.emplace_back("seed.microbitcoin.org", true);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,71);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,73);
@@ -352,6 +356,7 @@ public:
         consensus.lwma2Height = 200;
         consensus.lwma3Height = 999999999;
         consensus.lwmaAveragingWindow = 90;
+        consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
 
         consensus.rainforestHeight = 999999999;
         consensus.rainforestWarmUpWindow = 100;
