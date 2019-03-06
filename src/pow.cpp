@@ -206,7 +206,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     const auto isLwma3 = nHeight >= params.lwma3Height;
 
     const auto mbcWarmUp = (isHardfork && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow);
-    const auto rainforestWarmUp = (nHeight > params.rainforestHeight && nHeight < params.rainforestHeight + params.rainforestWarmUpWindow);
+    const auto rainforestWarmUp = (nHeight >= params.rainforestHeight && nHeight < params.rainforestHeight + params.rainforestWarmUpWindow);
 
     // Pow warm-up window
     if (mbcWarmUp || rainforestWarmUp) {
