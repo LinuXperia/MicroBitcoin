@@ -122,6 +122,9 @@ public:
         consensus.rainforestHeight = 830000;
         consensus.rainforestWarmUpWindow = 100;
 
+        consensus.maxFutureBlockTimeHeight = 999999999;
+        consensus.maxFutureBlockTimeFix = 4 * 60; // 4 minutes
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -262,6 +265,9 @@ public:
         consensus.rainforestHeight = 20;
         consensus.rainforestWarmUpWindow = 100;
 
+        consensus.maxFutureBlockTimeHeight = 999999999;
+        consensus.maxFutureBlockTimeFix = 4 * 60; // 4 minutes
+
         pchBitcoinMessageStart[0] = 0xd1;
         pchBitcoinMessageStart[1] = 0x23;
         pchBitcoinMessageStart[2] = 0x51;
@@ -360,6 +366,9 @@ public:
 
         consensus.rainforestHeight = 999999999;
         consensus.rainforestWarmUpWindow = 100;
+
+        consensus.maxFutureBlockTimeHeight = 999999999;
+        consensus.maxFutureBlockTimeFix = 4 * 60; // 4 minutes
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;

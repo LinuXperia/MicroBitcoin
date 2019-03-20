@@ -3185,7 +3185,14 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     }
 
     // Check timestamp
-    int64_t FTL = nHeight > consensusParams.rainforestHeight ? consensusParams.lwmaMaxFutureBlockTime : MAX_FUTURE_BLOCK_TIME;
+    int64_t FTL = MAX_FUTURE_BLOCK_TIME;
+
+    if (nHeight > consensusParams.maxFutureBlockTimeHeight) {
+        FTL = consensusParams.maxFutureBlockTimeFix;
+    } else if (nHeight > consensusParams.rainforestHeight) {
+        FTL = consensusParams.lwmaMaxFutureBlockTime;
+    }
+
     if (block.GetBlockTime() > nAdjustedTime + FTL) {
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
     }
