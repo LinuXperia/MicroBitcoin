@@ -118,12 +118,13 @@ public:
         consensus.lwma3Height = 654000;
         consensus.lwmaAveragingWindow = 90;
         consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
+        consensus.lwmaMaxFutureBlockTimeV2 = 4 * 60; // 4 minutes
 
         consensus.rainforestHeight = 830000;
         consensus.rainforestWarmUpWindow = 100;
 
-        consensus.maxFutureBlockTimeHeight = 999999999;
-        consensus.maxFutureBlockTimeFix = 4 * 60; // 4 minutes
+        consensus.rainforestHeightV2 = 999999999;
+        consensus.rainforestWarmUpWindowV2 = 100;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -261,12 +262,13 @@ public:
         consensus.lwma3Height = 15;
         consensus.lwmaAveragingWindow = 90;
         consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
+        consensus.lwmaMaxFutureBlockTimeV2 = 4 * 60; // 4 minutes
 
         consensus.rainforestHeight = 20;
-        consensus.rainforestWarmUpWindow = 100;
+        consensus.rainforestWarmUpWindow = 10;
 
-        consensus.maxFutureBlockTimeHeight = 999999999;
-        consensus.maxFutureBlockTimeFix = 4 * 60; // 4 minutes
+        consensus.rainforestHeightV2 = 30;
+        consensus.rainforestWarmUpWindowV2 = 10;
 
         pchBitcoinMessageStart[0] = 0xd1;
         pchBitcoinMessageStart[1] = 0x23;
@@ -363,12 +365,13 @@ public:
         consensus.lwma3Height = 999999999;
         consensus.lwmaAveragingWindow = 90;
         consensus.lwmaMaxFutureBlockTime = 12 * 60; // 12 minutes
+        consensus.lwmaMaxFutureBlockTimeV2 = 4 * 60; // 4 minutes
 
         consensus.rainforestHeight = 999999999;
         consensus.rainforestWarmUpWindow = 100;
 
-        consensus.maxFutureBlockTimeHeight = 999999999;
-        consensus.maxFutureBlockTimeFix = 4 * 60; // 4 minutes
+        consensus.rainforestHeightV2 = 999999999;
+        consensus.rainforestWarmUpWindowV2 = 100;
 
         pchBitcoinMessageStart[0] = 0xfa;
         pchBitcoinMessageStart[1] = 0xbf;

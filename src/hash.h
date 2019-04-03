@@ -21,6 +21,7 @@
 
 extern "C" {
 #include <crypto/sphlib/sph_groestl.h>
+#include <crypto/rfv2/rfv2.h>
 } // "C"
 
 typedef uint256 ChainCode;
@@ -284,6 +285,26 @@ inline uint256 Rainforest(const T* pbegin, const T* pend)
     size_t      length  = (pend - pbegin) * sizeof(T);
 
     rf256_hash(block, hash.begin(), length);
+
+    return hash;
+}
+
+/** Rainforest hash wrapper */
+template <typename T>
+inline uint256 RainforestV2(const T* pbegin, const T* pend)
+{
+    static T pblank[1];
+
+    uint256 hash;
+
+    const void* block = pbegin == pend ? pblank : pbegin;
+    size_t      length  = (pend - pbegin) * sizeof(T);
+
+    void *rambox;
+    rambox = malloc(RFV2_RAMBOX_SIZE * 8);
+    rfv2_raminit(rambox);
+    rfv2_hash(hash.begin(), block, length, rambox, NULL);
+    free(rambox);
 
     return hash;
 }

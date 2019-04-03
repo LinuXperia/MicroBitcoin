@@ -3187,8 +3187,8 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     // Check timestamp
     int64_t FTL = MAX_FUTURE_BLOCK_TIME;
 
-    if (nHeight > consensusParams.maxFutureBlockTimeHeight) {
-        FTL = consensusParams.maxFutureBlockTimeFix;
+    if (nHeight > consensusParams.rainforestHeightV2) {
+        FTL = consensusParams.lwmaMaxFutureBlockTimeV2;
     } else if (nHeight > consensusParams.rainforestHeight) {
         FTL = consensusParams.lwmaMaxFutureBlockTime;
     }

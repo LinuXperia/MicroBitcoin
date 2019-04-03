@@ -20,7 +20,9 @@
  */
 uint256 CBlockHeader::GetWorkHash(const Consensus::Params& consensusParams, int nHeight) const
 {
-    if (nHeight >= consensusParams.rainforestHeight) {
+    if (nHeight >= consensusParams.rainforestHeightV2) {
+        return RainforestV2(BEGIN(nVersion), END(nNonce));
+    } else if (nHeight >= consensusParams.rainforestHeight && nHeight < consensusParams.rainforestHeightV2) {
         return Rainforest(BEGIN(nVersion), END(nNonce));
     } else if (nHeight > consensusParams.mbcHeight && nHeight < consensusParams.rainforestHeight) {
         return Groestl(BEGIN(nVersion), END(nNonce));
