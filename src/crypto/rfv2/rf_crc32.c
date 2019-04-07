@@ -3,7 +3,6 @@
 // Date: Feb 13th, 2018
 
 #include <stdint.h>
-#include <stdlib.h>
 
 #if defined(RF_NOASM) || !defined(__aarch64__) || !defined(__ARM_FEATURE_CRC32)
 // crc32 lookup tables
@@ -157,9 +156,9 @@ static inline uint64_t rf_crc32_64(uint32_t crc, uint64_t msg)
 /* performs a CRC32 on a memory area */
 static inline uint32_t rf_crc32_mem(uint32_t crc, const void *msg, size_t len)
 {
-	uint8_t *msg8 = (uint8_t *)msg;
+	const uint8_t *msg8 = (uint8_t *)msg;
 	while (len--) {
-		crc = rf_crc32_8(crc, (uint32_t)*msg8++);
+		crc = rf_crc32_8(crc, *msg8++);
 	}
 	return crc;
 }

@@ -31,10 +31,11 @@
 // Note: always use the same options to build all files!
 //
 
-#ifndef RAINFOREST
-#define RAINFOREST
+#ifndef RFV2
+#define RFV2
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define RFV2_RAMBOX_SIZE (96*1024*1024/8)
 
@@ -42,4 +43,4 @@ int rfv2_hash(void *out, const void *in, size_t len, void *rambox, const void *r
 int rfv2_hash2(void *out, const void *in, size_t len, void *rambox, const void *rambox_template, uint32_t seed);
 void rfv2_raminit(void *area);
 
-#endif
+#endif // RFV2

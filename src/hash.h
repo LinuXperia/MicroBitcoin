@@ -300,11 +300,11 @@ inline uint256 RainforestV2(const T* pbegin, const T* pend)
     const void* block = pbegin == pend ? pblank : pbegin;
     size_t      length  = (pend - pbegin) * sizeof(T);
 
-    void *rambox;
-    rambox = malloc(RFV2_RAMBOX_SIZE * 8);
-    rfv2_raminit(rambox);
-    rfv2_hash(hash.begin(), block, length, rambox, NULL);
-    free(rambox);
+    // void *rambox;
+    // rambox = malloc(RFV2_RAMBOX_SIZE * 8);
+    // rfv2_raminit(rambox);
+    rfv2_hash(hash.begin(), block, length, NULL, NULL);
+    // free(rambox);
 
     return hash;
 }

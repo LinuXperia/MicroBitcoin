@@ -285,8 +285,6 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/rainforest.c \
   crypto/rainforest.h \
   crypto/rfv2/rfv2_core.c \
-  crypto/rfv2/rf_aes2r.c \
-  crypto/rfv2/rf_crc32.c \
   crypto/rfv2/rfv2.h
 
 if EXPERIMENTAL_ASM

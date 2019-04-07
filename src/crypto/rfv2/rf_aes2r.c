@@ -1,13 +1,6 @@
 #include <stdint.h>
-#include <stdlib.h>
 
-#ifndef RF_ALIGN
-#ifdef _MSC_VER
-#define RF_ALIGN(x) __declspec(align(x))
-#else
-#define RF_ALIGN(x) __attribute__((aligned(x)))
-#endif
-#endif
+#include "rfv2.h"
 
 // Two round implementation optimized for x86_64+AES-NI and ARMv8+crypto
 // extensions. Test pattern :
@@ -144,7 +137,7 @@ static inline uint32_t sbox(uint32_t in, uint8_t n)
 
 // this version is optimized for exactly two rounds.
 // _state_ must be 16-byte aligned.
-void aes2r_encrypt(uint8_t * state, const uint8_t * key)
+static inline void aes2r_encrypt(uint8_t * state, const uint8_t * key)
 {
 	uint32_t RF_ALIGN(16) key_schedule[12];
 	uint32_t t;

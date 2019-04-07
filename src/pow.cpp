@@ -96,8 +96,8 @@ unsigned int Lwma2CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t N = params.lwmaAveragingWindow;
     const int64_t k = N * (N + 1) * T / 2;
     const int height = pindexLast->nHeight;
-    const arith_uint256 powLimit = UintToArith256(params.powLimitStart);
-
+    const arith_uint256 powLimit = UintToArith256(params.powLimitMBC);
+    
     if (height < N) { return powLimit.GetCompact(); }
 
     arith_uint256 sum_target, previous_diff, next_target;
@@ -144,8 +144,13 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t N = params.lwmaAveragingWindow;
     const int64_t k = N * (N + 1) * T / 2;
     const int64_t height = pindexLast->nHeight;
-    const arith_uint256 powLimit = UintToArith256(params.powLimitStart);
-    
+
+    arith_uint256 powLimitTmp = UintToArith256(params.powLimitMBC);    
+    if (height >= params.rainforestHeightV2) {
+        powLimitTmp = UintToArith256(params.powLimitRFv2);
+    }
+
+    const arith_uint256 powLimit = powLimitTmp;
     if (height < N) { return powLimit.GetCompact(); }
 
     arith_uint256 sumTarget, previousDiff, nextTarget;
@@ -207,10 +212,14 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     const auto mbcWarmUp = (isHardfork && nHeight < (params.mbcHeight + 1) + params.nWarmUpWindow);
     const auto rainforestWarmUp = (nHeight >= params.rainforestHeight && nHeight < params.rainforestHeight + params.rainforestWarmUpWindow);
+    const auto rainforestWarmUpV2 = (nHeight >= params.rainforestHeightV2 && nHeight < params.rainforestHeightV2 + params.rainforestWarmUpWindowV2);
 
-    // Pow warm-up window
-    if (mbcWarmUp || rainforestWarmUp) {
-        return UintToArith256(params.powLimitStart).GetCompact();
+    // PoW warm-up window
+
+    if (rainforestWarmUpV2) {
+        return UintToArith256(params.powLimitRFv2).GetCompact();
+    } else if (mbcWarmUp || rainforestWarmUp) {
+        return UintToArith256(params.powLimitMBC).GetCompact();
     }
     
     if (params.fPowNoRetargeting) return pindexLast->nBits;
@@ -286,7 +295,17 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nHeight, const Conse
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(nHeight > params.mbcHeight ? params.powLimitStart : params.powLimit)) {
+    arith_uint256 bnPowLimitTmp = UintToArith256(params.powLimit);
+    if (nHeight >= params.rainforestHeightV2) {
+        bnPowLimitTmp = UintToArith256(params.powLimitRFv2);
+    } else if (nHeight > params.mbcHeight && nHeight < params.rainforestHeightV2) {
+        bnPowLimitTmp = UintToArith256(params.powLimitMBC);
+    }
+
+    const arith_uint256 bnPowLimit = bnPowLimitTmp;
+    std::cout << bnPowLimit.ToString() << std::endl;
+    
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > bnPowLimit) {
         return false;
     }
     
