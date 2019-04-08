@@ -20,13 +20,19 @@
  */
 uint256 CBlockHeader::GetWorkHash(const Consensus::Params& consensusParams, int nHeight) const
 {
+	std::cout << "INFO: GetWorkHash HEIGHT = " << nHeight << "\n";
+	
     if (nHeight >= consensusParams.rainforestHeightV2) {
+		std::cout << "INFO: RAINFOREST V2\n";
         return RainforestV2(BEGIN(nVersion), END(nNonce));
     } else if (nHeight >= consensusParams.rainforestHeight && nHeight < consensusParams.rainforestHeightV2) {
+		std::cout << "INFO: RAINFOREST V1\n";
         return Rainforest(BEGIN(nVersion), END(nNonce));
     } else if (nHeight > consensusParams.mbcHeight && nHeight < consensusParams.rainforestHeight) {
+		std::cout << "INFO: Groestl\n";
         return Groestl(BEGIN(nVersion), END(nNonce));
     } else {
+		std::cout << "INFO: SerializeHash\n";
         return SerializeHash(*this);
     }
 }

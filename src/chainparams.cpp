@@ -269,7 +269,7 @@ public:
         consensus.rainforestHeight = 20;
         consensus.rainforestWarmUpWindow = 10;
 
-        consensus.rainforestHeightV2 = 30;
+        consensus.rainforestHeightV2 = 1;
         consensus.rainforestWarmUpWindowV2 = 10;
 
         pchBitcoinMessageStart[0] = 0xd2;

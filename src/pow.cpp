@@ -3,6 +3,7 @@
 // Copyright (c) 2018-2019 MicroBitcoin developers
 // Copyright (c) 2017-2018 The Bitcoin Gold developers
 // Copyright (c) 2018 Zawy
+// Copyright (c) 2019 Romeo Micev (Implementation of the RainForest V2 PoW Algorithm) 
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +16,10 @@
 #include "uint256.h"
 
 #include "bignum.h"
+
+// RAINFOREST PoW Algorith Implementation
+//Pointer for allocation of the ByteCollusion Memory Space
+uint32_t *ByteCollusionSpace = NULL;
 
 // Rejected in favor of LWMA2
 // https://github.com/zawy12/difficulty-algorithms/issues/31 - DGW issues
@@ -309,10 +314,87 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, int nHeight, const Conse
         return false;
     }
     
-    // Check proof of work matches claimed amount
-    if (UintToArith256(hash) > bnTarget) {
-        return false;
-    }
+    std::cout << "BLOCK HEIGHT: " << nHeight << "\n";
+    
+    if(nHeight >= params.rainforestHeightV2) {
+		//=============================================================================================================
+		//RainForest V3 PoW Algorithm Implementation
+		
+		int32_t nBytesCollusion = 0x1f - (nBits >> 24);
+		//std::cout << "\nnBits = " << std::hex <<  nBits << " | nByteCollusion = " << std::hex << nBytesCollusion << "\n";
+		if(nBytesCollusion < 3)
+			nBytesCollusion = 3;
+		
+		if(ByteCollusionSpace == NULL) {
+			// INIT BYTE COLLUSION SPACE USING
+			// FIRST 32 BITS OF THE FRACTIONAl PARTS OF THE SQUARE ROOTS OF THE FIRST 1024 PRIMES 3..8167
 
-    return true;
+			ByteCollusionSpace = (uint32_t*)calloc(1024, sizeof(uint32_t));
+			if(ByteCollusionSpace == NULL) {
+				LogPrintf("Could not allocate Memory Space for the ByteCollusiion\n");
+				return false;
+			}
+			
+			int32_t i = 3, nPrime, c;
+			uint32_t PrimeSQRootFraction = 0;
+
+			for(nPrime=0; nPrime<1024;) {
+				for(c=2; c<=i-1; c++) {
+					if(i%c==0)
+						break;
+				}
+				
+				if(c==i) {
+					PrimeSQRootFraction = (uint32_t)(fmod(sqrt(i), 1.0) * pow(2.0, 32.0));
+					//std::cout << nPrime << ": " << i << " | " << PrimeSQRootFraction << "\n";
+					memcpy(ByteCollusionSpace+nPrime, &PrimeSQRootFraction, sizeof(unsigned int));
+					nPrime++;
+				}
+				
+				i++;
+			}
+		}
+		
+		//CHECK THE ByteCollisionSpace
+		//for(uint32_t x=0; x<1024; x++) {
+		//	std::cout << x << ": " << std::hex << ByteCollusionSpace+x << " | " << std::hex << *(ByteCollusionSpace+x) << "\n";
+		//}
+		
+		//CHECK RAINFOREST HASH
+		std::cout << "RainForest HASH: " << hash.GetHex() << "\n";
+		
+		//Extract Hash
+		uint64_t rf_hash[4];
+		rf_hash[0] = hash.GetUint64(0);
+		rf_hash[1] = hash.GetUint64(1);
+		rf_hash[2] = hash.GetUint64(2);
+		rf_hash[3] = hash.GetUint64(3);
+		
+		//CHECK EXTRACTED RAINFOREST HASH
+		std::cout << "Extracted RainForest HASH:\n[0] " << std::hex << rf_hash[0] << "\n[1] " << rf_hash[1] << "\n[2] " << rf_hash[2] << "\n[3] " << rf_hash[3] << "\n";
+		
+		uint32_t nBytePos;
+		//Loop Maximal 1024 concanated uint32 fraction of primes a4 Bytes minus the ByteCollusion part
+		uint32_t nMaxBytesLookup = 1024 * sizeof(uint32_t) - nBytesCollusion;
+		
+		// SCAN TROUGH 4096 BYTES OF MEMORY TO CHECK FOR A BYTE COLLUSION WITH nBYTES FROM THE HASH
+		for(nBytePos=0; nBytePos<nMaxBytesLookup; nBytePos++) {
+			//CHECK BYTE FOR BYTE IF A nBYTE COLLUSION EXIST IN THE MEM SPACE
+			// IF YES SUBMIT SHARE / BLOCK TO NETWORK AS SOLUTION WAS FOUND
+
+			if( !memcmp(&((char *)ByteCollusionSpace)[nBytePos], rf_hash, nBytesCollusion) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+	else {
+		// Check proof of work matches claimed amount
+		if (UintToArith256(hash) > bnTarget) {
+			return false;
+		}
+		
+		return true;
+	}
 }
